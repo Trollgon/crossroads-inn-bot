@@ -1,5 +1,6 @@
 from enum import Enum
 from discord import Embed
+from cogs.utils import split_embed
 
 
 class FeedbackLevel(Enum):
@@ -39,5 +40,4 @@ class FeedbackCollection:
         value = ""
         for fb in self.feedback:
             value += f"{fb.level.emoji} {fb.message}\n"
-        embed.add_field(name=f"{self.level.emoji} {self.message}:", value=value, inline=inline)
-        return embed
+        return split_embed(embed, f"{self.level.emoji} {self.message}:", value, inline)
