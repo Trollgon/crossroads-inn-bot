@@ -4,7 +4,7 @@ from gw2.api import API
 from gw2.snowcrows import get_sc_builds, get_sc_equipment
 from gw2.compare import compare_equipment
 from gw2.models.equipment import get_equipment
-import asyncio
+from gw2.models.feedback import *
 
 
 class SimpleDropdown(discord.ui.Select):
@@ -49,10 +49,11 @@ class RegistrationView(discord.ui.View):
         player_equipment = await get_equipment(self.api, self.character, int(self.equipment_tabs_select.values[0]))
         feedback = compare_equipment(player_equipment, sc_equipment)
 
-        if not feedback:
-            feedback = "Everything matches snowcrows"
+        if feedback.level == FeedbackLevel.INFO:
+            feedback.add(Feedback("Everything matches snowcrows", FeedbackLevel.INFO))
 
-        await interaction.followup.send(content=feedback)
+        embed = Embed(title="Gearcheck Feedback")
+        await interaction.followup.send(embed=feedback.to_embed(embed))
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
         # Enable submit button if both selects have a value selected

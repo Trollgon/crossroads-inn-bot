@@ -12,7 +12,7 @@ async def get_equipment(api: API, character: str, tab: int = 1):
         raise Exception("Equipment Tab not found")
 
     equipment = Equipment()
-    equipment.name = equipment_tab_items["name"]
+    equipment.name = equipment_tab_items["name"] if equipment_tab_items["name"] else str(equipment_tab_items["tab"])
     items = {}
     for equipment_tab_item in equipment_tab_items["equipment"]:
         item = Item()

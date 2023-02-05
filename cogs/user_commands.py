@@ -53,7 +53,7 @@ class UserCommands(commands.Cog):
             failed_registration = True
 
         if failed_registration:
-            embed.add_field(name=":exclamation: Please fix these errors and apply again.", value="", inline=False)
+            embed.add_field(name=f"{FeedbackLevel.WARNING.emoji} Please fix these errors and apply again.", value="", inline=False)
             await interaction.followup.send(embed=embed)
         else:
             await interaction.followup.send(embed=embed)
