@@ -1,0 +1,234 @@
+[
+    {
+        "boss": "Vale Guardian",
+        "achievement": {
+            "id": 2654,
+            "name": "Beyond the Vale",
+            "requirement": "Defeat the Vale Guardian."
+        }
+    },
+    {
+        "boss": "Gorseval the Multifarious",
+        "achievement": {
+            "id": 2667,
+            "name": "Put to Rest",
+            "requirement": "Defeat Gorseval the Multifarious."
+        }
+    },
+    {
+        "boss": "Sabetha the Saboteur",
+        "achievement": {
+            "id": 2659,
+            "name": "Fire Extinguisher",
+            "requirement": "Defeat Sabetha the Saboteur."
+        }
+    },
+    {
+        "boss": "Slothasor",
+        "achievement": {
+            "id": 2826,
+            "name": "The Big Sleep",
+            "requirement": "Defeat the cave monster and release the magic that corrupted it."
+        }
+    },
+    {
+        "boss": "Matthias Gabrel",
+        "achievement": {
+            "id": 2836,
+            "name": "Avenger of the Pact",
+            "requirement": "Slay Matthias and liberate the Pact squad leader."
+        }
+    },
+    {
+        "boss": "Keep Construct",
+        "achievement": {
+            "id": 3014,
+            "name": "Deconstructed",
+            "requirement": "Destroy Xera's Keep Construct."
+        }
+    },
+    {
+        "boss": "Xera",
+        "achievement": {
+            "id": 3017,
+            "name": "Dismantled",
+            "requirement": "Defeat Xera."
+        }
+    },
+    {
+        "boss": "Cairn the Indomitable",
+        "achievement": {
+            "id": 3349,
+            "name": "Breaking In",
+            "requirement": "Defeat Cairn the Indomitable."
+        }
+    },
+    {
+        "boss": "Mursaat Overseer",
+        "achievement": {
+            "id": 3321,
+            "name": "It's Just a Game",
+            "requirement": "Defeat the Mursaat Overseer game piece and win the prison game."
+        }
+    },
+    {
+        "boss": "Samarog",
+        "achievement": {
+            "id": 3347,
+            "name": "The Warden Will See You Now",
+            "requirement": "Defeat Samarog."
+        }
+    },
+    {
+        "boss": "Deimos",
+        "achievement": {
+            "id": 3364,
+            "name": "Free at Last",
+            "requirement": "Defeat the demon and liberate the prisoner."
+        }
+    },
+    {
+        "boss": "Soulless Horror",
+        "achievement": {
+            "id": 4004,
+            "name": "Souled Out",
+            "requirement": "Defeat the Soulless Horror."
+        }
+    },
+    {
+        "boss": "Statue of Death",
+        "achievement": {
+            "id": 3998,
+            "name": "Deathsaver",
+            "requirement": "Complete the Statue of Death event."
+        }
+    },
+    {
+        "boss": "Statue of Ice",
+        "achievement": {
+            "id": 4038,
+            "name": "Icebreaker",
+            "requirement": "Complete the Statue of Ice event."
+        }
+    },
+    {
+        "boss": "Statue of Darkness",
+        "achievement": {
+            "id": 4036,
+            "name": "Sore Eyes",
+            "requirement": "Complete the Statue of Darkness event."
+        }
+    },
+    {
+        "boss": "Dhuum",
+        "achievement": {
+            "id": 4016,
+            "name": "What's Death May Never Die",
+            "requirement": "Defeat the Voice in the Void."
+        }
+    },
+    {
+        "boss": "Conjured Amalgamate",
+        "achievement": {
+            "id": 4423,
+            "name": "A Thunderous Fall",
+            "requirement": "Defeat the Conjured Amalgamate."
+        }
+    },
+    {
+        "boss": "Twin Largos",
+        "achievement": {
+            "id": 4364,
+            "name": "Aquatic Assassins",
+            "requirement": "Defeat the largos assassins."
+        }
+    },
+    {
+        "boss": "Qadim",
+        "achievement": {
+            "id": 4396,
+            "name": "The Fire Djinn Extinguished",
+            "requirement": "Defeat Qadim."
+        }
+    },
+    {
+        "boss": "Cardinal Sabir",
+        "achievement": {
+            "id": 4801,
+            "name": "Storm Chaser",
+            "requirement": "Defeat Cardinal Sabir."
+        }
+    },
+    {
+        "boss": "Cardinal Adina",
+        "achievement": {
+            "id": 4796,
+            "name": "Terrain Tamed",
+            "requirement": "Defeat Cardinal Adina."
+        }
+    },
+    {
+        "boss": "Qadim the Peerless",
+        "achievement": {
+            "id": 4799,
+            "name": "Power Trip",
+            "requirement": "Defeat Qadim the Peerless."
+        }
+    },
+    {
+        "boss": "Whisper of Jormag",
+        "achievement": {
+            "id": 5118,
+            "name": "Legendary Whisper of Jormag",
+            "requirement": "Defeat the Whisper of Jormag in the Strike Mission."
+        }
+    },
+    {
+        "boss": "Aetherblade Hideout CM",
+        "achievement": {
+            "id": 6433,
+            "name": "Legendary Aetherblade Hideout",
+            "requirement": "Complete the Aetherblade Hideout Strike Mission with challenge mode active."
+        }
+    },
+    {
+        "boss": "Xunlai Jade Junkyard CM",
+        "achievement": {
+            "id": 6411,
+            "name": "Legendary Xunlai Jade Junkyard",
+            "requirement": "Complete the Xunlai Jade Junkyard Strike Mission with challenge mode active."
+        }
+    },
+    {
+        "boss": "Kaineng Overlook",
+        "achievement": {
+            "id": 6243,
+            "name": "Kaineng Overlook",
+            "requirement": "Complete the Kaineng Overlook Strike Mission."
+        }
+    },
+    {
+        "boss": "Kaineng Overlook CM",
+        "achievement": {
+            "id": 6431,
+            "name": "Legendary Kaineng Overlook",
+            "requirement": "Complete the Kaineng Overlook Strike Mission with challenge mode active."
+        }
+    },
+    {
+        "boss": "Harvest Temple",
+        "achievement": {
+            "id": 6513,
+            "name": "Harvest Temple",
+            "requirement": "Complete the Harvest Temple Strike Mission."
+        }
+    },
+    {
+        "boss": "Harvest Temple CM",
+        "achievement": {
+            "id": 6115,
+            "name": "Legendary Harvest Temple",
+            "requirement": "Complete the Harvest Temple Strike Mission with challenge mode active."
+        }
+    }
+]
