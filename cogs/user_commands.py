@@ -4,6 +4,7 @@ from discord.ext import commands
 import typing
 from gw2.api import API
 from cogs.views.Registration import RegistrationView
+from gw2.models.feedback import *
 
 professions = typing.Literal[
     "Guardian", "Warrior", "Revenant",
@@ -23,33 +24,32 @@ class UserCommands(commands.Cog):
 
         # Create embed
         embed = Embed(title="Application", color=0x0099ff)
-
         failed_registration = False
 
+        # Check API Key
         api = API(api_key)
-        if await api.check_key():
-            embed.add_field(name=":white_check_mark: API-Key valid", value="", inline=False)
-        else:
-            embed.add_field(name=":x: API-Key is not valid", value="", inline=False)
+        key_feedback = await api.check_key()
+        embed = key_feedback.to_embed(embed)
+        if key_feedback.level == FeedbackLevel.ERROR:
             await interaction.followup.send(embed=embed)
             return
 
         if character in await api.get_characters():
-            embed.add_field(name=f":white_check_mark: Character '{character}' found", value="", inline=False)
+            embed.add_field(name=f"{FeedbackLevel.INFO.emoji} Character '{character}' found", value="", inline=False)
         else:
-            embed.add_field(name=f":x: Character '{character}' doesn't exist", value="", inline=False)
+            embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Character '{character}' doesn't exist", value="", inline=False)
             failed_registration = True
 
-        if await api.check_mastery():
-            embed.add_field(name=":white_check_mark: Required Masteries are unlocked", value="", inline=False)
-        else:
-            embed.add_field(name=":x: Missing Masteries", value="", inline=False)
+        # Check masteries
+        mastery_feedback = await api.check_mastery()
+        embed = mastery_feedback.to_embed(embed)
+        if mastery_feedback.level == FeedbackLevel.ERROR:
             failed_registration = True
 
-        if await api.check_kp():
-            embed.add_field(name=":white_check_mark: Reached required KP", value="", inline=False)
-        else:
-            embed.add_field(name=":x: Missing KP", value="", inline=False)
+        # Check KP
+        kp_feedback = await api.check_kp()
+        embed = kp_feedback.to_embed(embed)
+        if kp_feedback.level == FeedbackLevel.ERROR:
             failed_registration = True
 
         if failed_registration:
