@@ -48,7 +48,7 @@ async def get_sc_equipment(api: API, url: str):
         upgrades = []
         for upgrade_id in upgrade_ids:
             upgrade = Upgrade()
-            upgrade.id = upgrade_id
+            upgrade.id = int(upgrade_id)
             upgrade.name = (await api.get_endpoint_v2(f"items/{upgrade.id}"))["name"]
             upgrades.append(upgrade)
         item.upgrades = upgrades

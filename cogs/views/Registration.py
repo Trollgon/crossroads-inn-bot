@@ -2,7 +2,7 @@ import discord
 from discord import app_commands, Interaction
 from gw2.api import API
 from gw2.snowcrows import get_sc_builds, get_sc_equipment
-from gw2.compare import compare_equipment
+from gw2.compare import *
 from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
 
@@ -45,17 +45,15 @@ class RegistrationView(discord.ui.View):
             child.disabled = True
         await interaction.message.edit(view=self)
 
-        sc_equipment = await get_sc_equipment(self.api, self.sc_build_select.values[0])
+        reference_equipment = await get_sc_equipment(self.api, self.sc_build_select.values[0])
         player_equipment = await get_equipment(self.api, self.character, int(self.equipment_tabs_select.values[0]))
-        fbg_armor, fbg_weapons, fbg_trinkets = compare_equipment(player_equipment, sc_equipment)
-
-        #if feedback.level == FeedbackLevel.INFO:
-        #    feedback.add(Feedback("Everything matches snowcrows", FeedbackLevel.INFO))
 
         embed = Embed(title="Gearcheck Feedback",
-                      description=f"Comparing equipment tab {player_equipment.name} to {sc_equipment.name}")
-        for active_fbg in [fbg_armor, fbg_trinkets, fbg_weapons]:
-            active_fbg.to_embed(embed, False)
+                      description=f"Comparing equipment tab {player_equipment.name} to {reference_equipment.name}")
+        compare_armor(player_equipment, reference_equipment).to_embed(embed, False)
+        compare_trinkets(player_equipment, reference_equipment).to_embed(embed, False)
+        compare_weapons(player_equipment, reference_equipment).to_embed(embed, False)
+
         await interaction.followup.send(embed=embed)
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
