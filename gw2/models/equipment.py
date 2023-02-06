@@ -1,5 +1,9 @@
 from gw2.api import *
 
+ITEM_SLOT_WHITELIST = ["WeaponA1", "WeaponA2", "WeaponB1", "WeaponB2",
+                       "Helm", "Shoulders", "Coat", "Gloves", "Leggings", "Boots",
+                       "Backpack", "Accessory1", "Accessory2", "Amulet", "Ring1", "Ring2"]
+
 
 async def get_equipment(api: API, character: str, tab: int = 1):
     char_data = await api.get_character_data(character)
@@ -15,6 +19,10 @@ async def get_equipment(api: API, character: str, tab: int = 1):
     equipment.name = equipment_tab_items["name"] if equipment_tab_items["name"] else str(equipment_tab_items["tab"])
     items = {}
     for equipment_tab_item in equipment_tab_items["equipment"]:
+        # Skip items like underwater weapons and aqua breather
+        if not equipment_tab_item["slot"] in ITEM_SLOT_WHITELIST:
+            continue
+
         item = Item()
         item.id = equipment_tab_item["id"]
         item_data = await api.get_endpoint_v2(f"items/{equipment_tab_item['id']}")
