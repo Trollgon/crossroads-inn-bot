@@ -14,28 +14,28 @@ class API:
             async with session.get(url=url, headers=headers) as resp:
                 return await resp.json()
 
-    async def check_key(self) -> FeedbackCollection:
-        fbc = FeedbackCollection("API Key")
+    async def check_key(self) -> FeedbackGroup:
+        fbg = FeedbackGroup("API Key")
         # Check if api key is valid
         tokeninfo = await self.get_endpoint_v2("tokeninfo")
         if "Invalid access token" in str(tokeninfo):
-            fbc.add(Feedback("Invalid API Key", FeedbackLevel.ERROR))
-            return fbc
+            fbg.add(Feedback("Invalid API Key", FeedbackLevel.ERROR))
+            return fbg
 
-        fbc.add(Feedback("API Key is valid", FeedbackLevel.INFO))
+        fbg.add(Feedback("API Key is valid", FeedbackLevel.SUCCESS))
 
         # Check if correct permissions are set
         perms = tokeninfo["permissions"]
         if "account" not in perms:  # Should always be set but check anyway
-            fbc.add(Feedback("API Key is missing 'account' permission", FeedbackLevel.ERROR))
+            fbg.add(Feedback("API Key is missing 'account' permission", FeedbackLevel.ERROR))
         if "progression" not in perms:
-            fbc.add(Feedback("API Key is missing 'progression' permission", FeedbackLevel.ERROR))
+            fbg.add(Feedback("API Key is missing 'progression' permission", FeedbackLevel.ERROR))
         if "characters" not in perms:
-            fbc.add(Feedback("API Key is missing 'characters' permission", FeedbackLevel.ERROR))
+            fbg.add(Feedback("API Key is missing 'characters' permission", FeedbackLevel.ERROR))
 
-        if fbc.level == FeedbackLevel.INFO:
-            fbc.add(Feedback("API Key permissions are set up correctly", FeedbackLevel.INFO))
-        return fbc
+        if fbg.level == FeedbackLevel.SUCCESS:
+            fbg.add(Feedback("API Key permissions are set up correctly", FeedbackLevel.SUCCESS))
+        return fbg
 
     async def get_account_name(self) -> str:
         account = await self.get_endpoint_v2("account")
@@ -44,8 +44,8 @@ class API:
     async def get_characters(self) -> list[str]:
         return await self.get_endpoint_v2("characters")
 
-    async def check_mastery(self) -> FeedbackCollection:
-        fbc = FeedbackCollection("Masteries")
+    async def check_mastery(self) -> FeedbackGroup:
+        fbg = FeedbackGroup("Masteries")
         mastery_list = await self.get_endpoint_v2("account/masteries")
         gliding = False
         jackal = False
@@ -60,17 +60,17 @@ class API:
 
         # add feedback
         if gliding:
-            fbc.add(Feedback("Ley Line Gliding is unlocked", FeedbackLevel.INFO))
+            fbg.add(Feedback("Ley Line Gliding is unlocked", FeedbackLevel.SUCCESS))
         else:
-            fbc.add(Feedback("Ley Line Gliding is not unlocked", FeedbackLevel.ERROR))
+            fbg.add(Feedback("Ley Line Gliding is not unlocked", FeedbackLevel.ERROR))
         if jackal:
-            fbc.add(Feedback("Shifting Sands is unlocked", FeedbackLevel.INFO))
+            fbg.add(Feedback("Shifting Sands is unlocked", FeedbackLevel.SUCCESS))
         else:
-            fbc.add(Feedback("Shifting Sands is not unlocked", FeedbackLevel.ERROR))
-        return fbc
+            fbg.add(Feedback("Shifting Sands is not unlocked", FeedbackLevel.ERROR))
+        return fbg
 
-    async def check_kp(self) -> FeedbackCollection:
-        fbc = FeedbackCollection("Killproof")
+    async def check_kp(self) -> FeedbackGroup:
+        fbg = FeedbackGroup("Killproof")
         bosses_killed = []
 
         # load json with achievement ids
@@ -106,12 +106,12 @@ class API:
 
         # check if at least 5 different bosses were killed
         if len(bosses_killed) >= 5:
-            fbc.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
-                             FeedbackLevel.INFO))
+            fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
+                             FeedbackLevel.SUCCESS))
         else:
-            fbc.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
-                             FeedbackLevel.INFO))
-        return fbc
+            fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
+                             FeedbackLevel.SUCCESS))
+        return fbg
 
     async def get_character_data(self, character_name):
         return await self.get_endpoint_v2(f"characters?v=2021-07-24T00%3A00%3A00Z&id={character_name}")

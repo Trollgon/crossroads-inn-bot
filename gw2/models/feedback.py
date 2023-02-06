@@ -4,7 +4,7 @@ from cogs.utils import split_embed
 
 
 class FeedbackLevel(Enum):
-    INFO = 1
+    SUCCESS = 1
     WARNING = 2
     ERROR = 3
 
@@ -45,14 +45,14 @@ class FeedbackLevel(Enum):
 
 
 class Feedback:
-    def __init__(self, message: str, level: FeedbackLevel = FeedbackLevel.INFO):
+    def __init__(self, message: str, level: FeedbackLevel = FeedbackLevel.SUCCESS):
         self.message: str = message
         self.level: FeedbackLevel = level
 
 
-class FeedbackCollection:
+class FeedbackGroup:
     def __init__(self, message: str):
-        self.level: FeedbackLevel = FeedbackLevel.INFO
+        self.level: FeedbackLevel = FeedbackLevel.SUCCESS
         self.feedback: list[Feedback] = []
         self.message: str = message
 

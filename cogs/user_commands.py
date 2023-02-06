@@ -35,7 +35,7 @@ class UserCommands(commands.Cog):
             return
 
         if character in await api.get_characters():
-            embed.add_field(name=f"{FeedbackLevel.INFO.emoji} Character '{character}' found", value="", inline=False)
+            embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Character '{character}' found", value="", inline=False)
         else:
             embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Character '{character}' doesn't exist", value="", inline=False)
             failed_registration = True
