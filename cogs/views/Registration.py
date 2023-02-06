@@ -47,13 +47,16 @@ class RegistrationView(discord.ui.View):
 
         sc_equipment = await get_sc_equipment(self.api, self.sc_build_select.values[0])
         player_equipment = await get_equipment(self.api, self.character, int(self.equipment_tabs_select.values[0]))
-        feedback = compare_equipment(player_equipment, sc_equipment)
+        fbc_armor, fbc_weapons, fbc_trinkets = compare_equipment(player_equipment, sc_equipment)
 
-        if feedback.level == FeedbackLevel.INFO:
-            feedback.add(Feedback("Everything matches snowcrows", FeedbackLevel.INFO))
+        #if feedback.level == FeedbackLevel.INFO:
+        #    feedback.add(Feedback("Everything matches snowcrows", FeedbackLevel.INFO))
 
-        embed = Embed(title="Gearcheck Feedback")
-        await interaction.followup.send(embed=feedback.to_embed(embed))
+        embed = Embed(title="Gearcheck Feedback",
+                      description=f"Comparing equipment tab {player_equipment.name} to {sc_equipment.name}")
+        for active_fbc in [fbc_armor, fbc_trinkets, fbc_weapons]:
+            active_fbc.to_embed(embed, False)
+        await interaction.followup.send(embed=embed)
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
         # Enable submit button if both selects have a value selected

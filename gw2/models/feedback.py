@@ -18,6 +18,31 @@ class FeedbackLevel(Enum):
             case 3:
                 return ":x:"
 
+    def __lt__(self, other):
+        if self.value < other.value:
+            return True
+        return False
+
+    def __le__(self, other):
+        if self.value <= other.value:
+            return True
+        return False
+
+    def __eq__(self, other):
+        if self.value == other.value:
+            return True
+        return False
+
+    def __ge__(self, other):
+        if self.value >= other.value:
+            return True
+        return False
+
+    def __gt__(self, other):
+        if self.value > other.value:
+            return True
+        return False
+
 
 class Feedback:
     def __init__(self, message: str, level: FeedbackLevel = FeedbackLevel.INFO):

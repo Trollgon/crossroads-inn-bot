@@ -2,15 +2,22 @@ from gw2.models.equipment import *
 from gw2.models.feedback import *
 
 
-def compare_equipment(player_equipment: Equipment, sc_equipment: Equipment) -> FeedbackCollection:
+def compare_equipment(player_equipment: Equipment, sc_equipment: Equipment) -> (FeedbackCollection, FeedbackCollection, FeedbackCollection):
     exotic = Rarity("Exotic")
-    fbc = FeedbackCollection(f"Comparing equipment tab {player_equipment.name} to {sc_equipment.name}")
-    all_exotic = True
-    all_stats_match = True
+    fbc_armor = FeedbackCollection("Armor")
+    fbc_weapons = FeedbackCollection("Weapons")
+    fbc_trinkets = FeedbackCollection("Trinkets")
 
+
+    active_fbc = fbc_armor
     for slot, sc_item in sc_equipment.items.items():
+        if "Accessory" in slot:
+            active_fbc = fbc_trinkets
+        if "Weapon" in slot:
+            active_fbc = fbc_weapons
+
         if slot not in player_equipment.items:
-            fbc.add(Feedback(f"{sc_item.name} is missing", FeedbackLevel.ERROR))
+            active_fbc.add(Feedback(f"{sc_item.name} is missing", FeedbackLevel.ERROR))
             continue
         player_item: Item = player_equipment.items[slot]
 
@@ -19,12 +26,10 @@ def compare_equipment(player_equipment: Equipment, sc_equipment: Equipment) -> F
             continue
         # Check stats
         if player_item.stats.name != sc_item.stats.name:
-            fbc.add(Feedback(f"{player_item.stats} {player_item.name}: Should be {sc_item.stats.name}", FeedbackLevel.WARNING))
-            all_stats_match = False
+            active_fbc.add(Feedback(f"{player_item.stats} {player_item.name}: Should be {sc_item.stats.name}", FeedbackLevel.WARNING))
 
         if player_item.rarity < exotic:
-            fbc.add(Feedback(f"{player_item.rarity} {player_item.name}: Should be at least {exotic}", FeedbackLevel.ERROR))
-            all_exotic = False
+            active_fbc.add(Feedback(f"{player_item.rarity} {player_item.name}: Should be at least {exotic}", FeedbackLevel.ERROR))
 
         sc_upgrades = sc_item.upgrades.copy()
         player_upgrades = player_item.upgrades.copy()
@@ -34,12 +39,13 @@ def compare_equipment(player_equipment: Equipment, sc_equipment: Equipment) -> F
                     sc_upgrades.remove(sc_upgrade)
                     player_upgrades.remove(player_upgrade)
         if len(sc_upgrades) != 0 or len(player_upgrades) != 0:
-            fbc.add(Feedback(f"{player_item.name}: Wrong upgrade ({', '.join(f'{upgrade}' for upgrade in player_upgrades)}"
+            active_fbc.add(Feedback(f"{player_item.name}: Wrong upgrade ({', '.join(f'{upgrade}' for upgrade in player_upgrades)}"
                              f" instead of {', '.join(f'{upgrade}' for upgrade in sc_upgrades)})", FeedbackLevel.WARNING))
 
     # Add positive feedback
-    if all_exotic:
-        fbc.add(Feedback(f"All items are at least exotic", FeedbackLevel.INFO))
-    if all_stats_match:
-        fbc.add(Feedback(f"Stats of all items are correct", FeedbackLevel.INFO))
-    return fbc
+    for active_fbc in [fbc_armor, fbc_trinkets, fbc_weapons]:
+        if active_fbc.level <= FeedbackLevel.WARNING:
+            active_fbc.add(Feedback(f"All items are at least exotic", FeedbackLevel.INFO))
+        if active_fbc.level <= FeedbackLevel.INFO:
+            active_fbc.add(Feedback(f"Stats of all items are correct", FeedbackLevel.INFO))
+    return fbc_armor, fbc_weapons, fbc_trinkets
