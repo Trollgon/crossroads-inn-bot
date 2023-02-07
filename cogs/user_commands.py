@@ -5,6 +5,7 @@ import typing
 from gw2.api import API
 from cogs.views.Registration import RegistrationView
 from gw2.models.feedback import *
+from gw2.models.equipment import get_equipment, Equipment
 
 professions = typing.Literal[
     "Guardian", "Warrior", "Revenant",
@@ -61,4 +62,12 @@ class UserCommands(commands.Cog):
             await view.init()
             await interaction.edit_original_response(embed=embed, view=view)
 
+    @app_commands.command(name="gear")
+    async def gear(self, interaction: Interaction, api_key: str, character: str, template: int):
+        # Defer to prevent interaction timeout
+        await interaction.response.defer()
 
+        api = API(api_key)
+        equipment: Equipment = await get_equipment(api, character, template)
+
+        await interaction.followup.send(embed=equipment.to_embed())
