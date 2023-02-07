@@ -20,7 +20,7 @@ def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment)
                     sc_upgrades.remove(sc_upgrade)
                     player_upgrades.remove(player_upgrade)
         if len(sc_upgrades) != 0 or len(player_upgrades) != 0:
-            fbg.add(Feedback(f"Your {player_item.name} has a{' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
+            fbg.add(Feedback(f"Your {player_item.name} has a {' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
                              f" instead of {' and '.join(f'{upgrade}' for upgrade in sc_upgrades)}", FeedbackLevel.WARNING))
 
     if fbg.level <= FeedbackLevel.WARNING:
@@ -78,7 +78,7 @@ def compare_item(slot: str,
 
     # Compare Item stats
     if player_item.stats.name != reference_item.stats.name:
-        fbg.add(Feedback(f"Your {player_item.name} is {player_item.stats.name} but should be {reference_item.stats.name}",
+        fbg.add(Feedback(f"Your '{player_item.stats.name} {player_item.name}' should be {reference_item.stats.name}",
                          FeedbackLevel.WARNING))
 
     # Check rarity

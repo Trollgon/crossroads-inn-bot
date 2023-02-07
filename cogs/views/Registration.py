@@ -1,6 +1,5 @@
 import discord
-from discord import app_commands, Interaction
-from gw2.api import API
+from discord import Interaction
 from gw2.snowcrows import get_sc_builds, get_sc_equipment
 from gw2.compare import *
 from gw2.models.equipment import get_equipment
