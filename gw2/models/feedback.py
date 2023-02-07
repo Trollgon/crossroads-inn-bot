@@ -66,3 +66,19 @@ class FeedbackGroup:
         for fb in self.feedback:
             value += f"{fb.level.emoji} {fb.message}\n"
         return split_embed(embed, f"{self.level.emoji} {self.message}:", value, inline)
+
+
+class FeedbackCollection:
+    def __init__(self):
+        self.level: FeedbackLevel = FeedbackLevel.SUCCESS
+        self.feedback: list[FeedbackGroup] = []
+
+    def add(self, feedback_group: FeedbackGroup) -> None:
+        self.feedback.append(feedback_group)
+        if feedback_group.level.value > self.level.value:
+            self.level = feedback_group.level
+
+    def to_embed(self, embed: Embed = Embed(title="Feedback"), inline: bool = False) -> Embed:
+        for fb in self.feedback:
+            fb.to_embed(embed, inline)
+        return embed

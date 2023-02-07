@@ -58,7 +58,7 @@ class UserCommands(commands.Cog):
             await interaction.followup.send(embed=embed)
         else:
             await interaction.followup.send(embed=embed)
-            view = RegistrationView(api, character)
+            view = RegistrationView(self.bot, api, character)
             await view.init()
             await interaction.edit_original_response(embed=embed, view=view)
 

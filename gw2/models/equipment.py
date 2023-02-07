@@ -1,5 +1,4 @@
 from gw2.api import *
-from sqlalchemy.orm import declarative_base
 
 ITEM_SLOT_WHITELIST = ["WeaponA1", "WeaponA2", "WeaponB1", "WeaponB2",
                        "Helm", "Shoulders", "Coat", "Gloves", "Leggings", "Boots",
@@ -66,9 +65,6 @@ async def get_equipment(api: API, character: str, tab: int = 1):
     return equipment
 
 
-Base = declarative_base()
-
-
 class Equipment:
     name: str = None
     items: dict = {}
@@ -97,7 +93,7 @@ class Equipment:
         for slot in ITEM_SLOT_WHITELIST[:4]:
             if slot in self.items:
                 value += f"{self.items[slot].stats} {slot} ({', '.join(f'{upgrade}' for upgrade in self.items[slot].upgrades)})\n"
-        embed.add_field(name="Armor", value=value, inline=False)
+        embed.add_field(name="Weapons", value=value, inline=False)
         return embed
 
 

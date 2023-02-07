@@ -2,12 +2,10 @@ import discord
 from discord.ext import commands
 from cogs.user_commands import UserCommands
 from cogs.admin_commands import AdminCommands
-import asyncio
-import logging
 
 GUILD = discord.Object(id=1071457065056354324)
 intents = discord.Intents.default()
-intents.message_content = True
+intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
