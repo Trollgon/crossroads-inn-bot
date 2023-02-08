@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from gw2.models.equipment import *
 import os
+import aiohttp
 
 
 async def sc_get(url):
@@ -22,7 +23,7 @@ async def get_sc_equipment(api: API, url: str):
         div = table_data[i].div
         item = Item()
         item.id = div["data-armory-ids"]
-        item_data = await api.get_endpoint_v2(f"items/{item.id}")
+        item_data = await api.get_item(item.id)
         item.name = item_data["name"]
         item.rarity = Rarity(item_data["rarity"])
 
@@ -36,7 +37,7 @@ async def get_sc_equipment(api: API, url: str):
             stats.id = item_data["details"]["infix_upgrade"]["id"]
             for stat in item_data["details"]["infix_upgrade"]["attributes"]:
                 stats.attributes[stat["attribute"]] = stat["modifier"]
-        stats_data = await api.get_endpoint_v2(f"itemstats/{stats.id}")
+        stats_data = await api.get_item_stats(stats.id)
         stats.name = stats_data["name"]
         item.stats = stats
 
@@ -47,7 +48,7 @@ async def get_sc_equipment(api: API, url: str):
         for upgrade_id in upgrade_ids:
             upgrade = Upgrade()
             upgrade.id = int(upgrade_id)
-            upgrade.name = (await api.get_endpoint_v2(f"items/{upgrade.id}"))["name"]
+            upgrade.name = (await api.get_item(upgrade.id))["name"]
             upgrades.append(upgrade)
         item.upgrades = upgrades
 

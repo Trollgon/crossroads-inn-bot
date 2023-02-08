@@ -25,7 +25,7 @@ async def get_equipment(api: API, character: str, tab: int = 1):
 
         item = Item()
         item.id = equipment_tab_item["id"]
-        item_data = await api.get_endpoint_v2(f"items/{equipment_tab_item['id']}")
+        item_data = await api.get_item(equipment_tab_item['id'])
         item.name = item_data["name"]
         item.rarity = Rarity(item_data["rarity"])
 
@@ -53,7 +53,7 @@ async def get_equipment(api: API, character: str, tab: int = 1):
                 print(f"Unable to determine stats for item: {item}")
                 continue
 
-        stats_data = await api.get_endpoint_v2(f"itemstats/{stats.id}")
+        stats_data = await api.get_item_stats(stats.id)
         stats.name = stats_data["name"]
         item.stats = stats
 
@@ -62,7 +62,7 @@ async def get_equipment(api: API, character: str, tab: int = 1):
             for upgrade_data in equipment_tab_item["upgrades"]:
                 upgrade = Upgrade()
                 upgrade.id = upgrade_data
-                upgrade.name = (await api.get_endpoint_v2(f"items/{upgrade.id}"))["name"]
+                upgrade.name = (await api.get_item(upgrade.id))["name"]
                 upgrades.append(upgrade)
             item.upgrades = upgrades
         items[equipment_tab_item["slot"]] = item

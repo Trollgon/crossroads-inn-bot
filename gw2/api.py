@@ -1,23 +1,34 @@
 import json
-import aiohttp
 from gw2.models.feedback import *
+from aiohttp_client_cache import CachedSession, SQLiteBackend
 
 
 class API:
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None, version: str = "2021-07-24T00%3A00%3A00Z"):
         self.api_key = api_key
+        self.version = version
+        self.cache = SQLiteBackend(
+            cache_name="aiohttp-cache.db",
+            allowed_codes=(200, 418),
+            urls_expire_after={
+                "https://api.guildwars2.com/v2/items": 60*60*24,        # Cache items for 24h
+                "https://api.guildwars2.com/v2/itemstats": 60*60*24,    # Cache item stats for 24h
+                "https://api.guildwars2.com/": 0,                       # Don't cache everything else
+            })
 
     async def get_endpoint_v2(self, endpoint: str):
         url = f"https://api.guildwars2.com/v2/{endpoint}"
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url=url, headers=headers) as resp:
-                if resp.status == 200:
-                    return await resp.json()
-                else:
-                    raise Exception(f"{resp.status}: {await resp.text()}")
+        if self.version:
+            headers["X-Schema-Version"] = self.version
+        async with CachedSession(cache=self.cache) as session:
+            resp = await session.get(url, headers=headers)
+            if resp.status == 200:
+                return await resp.json()
+            else:
+                raise Exception(f"{resp.url} {resp.status}: {await resp.text()}")
 
     async def check_key(self) -> FeedbackGroup:
         fbg = FeedbackGroup("API Key")
@@ -48,6 +59,15 @@ class API:
 
     async def get_characters(self) -> list[str]:
         return await self.get_endpoint_v2("characters")
+
+    async def get_character_data(self, character_name):
+        return await self.get_endpoint_v2(f"characters?id={character_name}")
+
+    async def get_item(self, item_id: int):
+        return await self.get_endpoint_v2(f"items/{item_id}")
+
+    async def get_item_stats(self, item_id: int):
+        return await self.get_endpoint_v2(f"itemstats/{item_id}")
 
     async def check_mastery(self) -> FeedbackGroup:
         fbg = FeedbackGroup("Masteries")
@@ -117,6 +137,3 @@ class API:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
                              FeedbackLevel.SUCCESS))
         return fbg
-
-    async def get_character_data(self, character_name):
-        return await self.get_endpoint_v2(f"characters?v=2021-07-24T00%3A00%3A00Z&id={character_name}")
