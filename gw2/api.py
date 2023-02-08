@@ -4,12 +4,14 @@ from gw2.models.feedback import *
 
 
 class API:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str = None):
         self.api_key = api_key
 
     async def get_endpoint_v2(self, endpoint: str):
         url = f"https://api.guildwars2.com/v2/{endpoint}"
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url=url, headers=headers) as resp:
                 if resp.status == 200:

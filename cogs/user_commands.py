@@ -1,4 +1,3 @@
-import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
@@ -6,6 +5,7 @@ from gw2.api import API
 from cogs.views.Registration import RegistrationView
 from gw2.models.feedback import *
 from gw2.models.equipment import get_equipment, Equipment
+from gw2.snowcrows import add_build, remove_build, get_builds
 
 professions = typing.Literal[
     "Guardian", "Warrior", "Revenant",
@@ -71,3 +71,35 @@ class UserCommands(commands.Cog):
         equipment: Equipment = await get_equipment(api, character, template)
 
         await interaction.followup.send(embed=equipment.to_embed())
+
+    @app_commands.command(name="builds")
+    async def builds(self, interaction: Interaction, profession: typing.Optional[professions]):
+        builds = get_builds(profession)
+        embed = Embed(title="Builds")
+        for profession in builds:
+            print(type(builds[profession]))
+            value = ""
+            for build in builds[profession]:
+                value += f"[{build}](https://snowcrows.com{builds[profession][build]})\n"
+            embed.add_field(name=profession, value=value)
+        await interaction.response.send_message(embed=embed)
+
+    build = app_commands.Group(name="build", description="Add and remove builds")
+
+    @build.command(name="add")
+    async def build_add(self, interaction: Interaction, snowcrows_url: str):
+        if not snowcrows_url.startswith("https://snowcrows.com"):
+            await interaction.response.send_message("Invalid url", ephemeral=True)
+            return
+
+        await add_build(url=snowcrows_url.replace("https://snowcrows.com", ""))
+        await interaction.response.send_message("Build was added", ephemeral=True)
+
+    @build.command(name="remove")
+    async def build_remove(self, interaction: Interaction, snowcrows_url: str):
+        if not snowcrows_url.startswith("https://snowcrows.com"):
+            await interaction.response.send_message("Invalid url", ephemeral=True)
+            return
+
+        remove_build(url=snowcrows_url.replace("https://snowcrows.com", ""))
+        await interaction.response.send_message("Build was removed", ephemeral=True)

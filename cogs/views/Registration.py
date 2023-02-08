@@ -1,6 +1,6 @@
 import discord
 from discord import Interaction
-from gw2.snowcrows import get_sc_builds, get_sc_equipment
+from gw2.snowcrows import get_sc_builds, get_sc_equipment, get_builds
 from gw2.compare import *
 from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
@@ -31,7 +31,7 @@ class SimpleButtonView(discord.ui.View):
         self.stop()
 
         await self.func(interaction, *self.args)
-        await interaction.response.send_message("The manual gearcheck has successfully been requested")
+        await interaction.response.send_message(f"{FeedbackLevel.SUCCESS.emoji} The manual gearcheck was requested")
 
 
 class RegistrationView(discord.ui.View):
@@ -53,9 +53,10 @@ class RegistrationView(discord.ui.View):
             self.equipment_tabs_select.add_option(label=name, value=str(equipment_tab["tab"]))
         self.add_item(self.equipment_tabs_select)
 
-        # Snowcrows build select
-        for build in (await get_sc_builds(character_data["profession"])).items():
-            self.sc_build_select.add_option(label=build[0], value=build[1])
+        # Build select
+        builds = get_builds(character_data["profession"])[character_data["profession"]]
+        for build in builds:
+            self.sc_build_select.add_option(label=build, value=builds[build])
         self.add_item(self.sc_build_select)
 
     @discord.ui.button(label="Submit", style=discord.ButtonStyle.green, row=2, disabled=True)

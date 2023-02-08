@@ -1,10 +1,6 @@
-import asyncio
-
-import aiohttp
 from bs4 import BeautifulSoup
-from gw2.api import *
 from gw2.models.equipment import *
-import typing
+import os
 
 
 async def sc_get(url):
@@ -82,7 +78,7 @@ async def get_sc_equipment(api: API, url: str):
     return equipment
 
 
-professions = typing.Literal[
+professions = [
     "Guardian", "Warrior", "Revenant",
     "Engineer", "Ranger", "Thief",
     "Elementalist", "Mesmer", "Necromancer"
@@ -102,3 +98,56 @@ async def get_sc_builds(profession: professions):
     for i, build_name in enumerate(sc_soup.find_all("h2", {"class": "block font-medium w-60"})):
         builds[build_name.text] = links[i]
     return builds
+
+
+async def init_builds():
+    if os.path.isfile("gw2/builds.json"):
+        return
+    builds = {}
+    for profession in professions:
+        # Get recommended builds for this profession
+        builds[profession] = await get_sc_builds(profession)
+
+    store_builds(builds)
+    print("builds initialized")
+
+
+def get_builds(profession: professions = None):
+    if not os.path.isfile("gw2/builds.json"):
+        raise Exception("No builds found")
+
+    with open("gw2/builds.json", "r") as f:
+        builds = json.loads(f.read())
+
+    if profession:
+        return {profession: builds[profession]}
+    return builds
+
+
+def store_builds(builds: dict):
+    with open("gw2/builds.json", "w") as f:
+        f.write(json.dumps(builds))
+
+
+async def add_build(url: str):
+    builds = get_builds()
+    resp = await sc_get(url)
+    sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
+    title = sc_soup.find_all("h1", {"class": "font-sans font-bold text-5xl m-0 p-0"})[0].text
+    profession = sc_soup.find_all("a", {"class": "-top-1 relative inline-block lg:inline bg-black bg-opacity-30 py-1.5 px-4 rounded"})[0].text.split(" ")[0]
+    profession_builds = builds[profession]
+    profession_builds[title] = url
+    store_builds(builds)
+
+
+def remove_build(url: str):
+    builds = get_builds()
+    for profession in builds:
+        for build in builds[profession]:
+            if builds[profession][build] == url:
+                del builds[profession][build]
+                store_builds(builds)
+                return
+    else:
+        print("build not found")
+

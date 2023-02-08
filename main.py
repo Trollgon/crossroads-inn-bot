@@ -18,6 +18,7 @@ async def on_ready():
 
     bot.tree.copy_global_to(guild=GUILD)
     await bot.tree.sync(guild=GUILD)
+    await init_builds()
 
 
 bot.run("API_KEY")
