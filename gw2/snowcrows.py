@@ -1,3 +1,5 @@
+import asyncio
+
 import aiohttp
 from bs4 import BeautifulSoup
 from gw2.api import *
@@ -17,7 +19,7 @@ async def get_sc_equipment(api: API, url: str):
     table_data = sc_soup.find_all("td")
 
     equipment = Equipment()
-    equipment.name = url.split("/")[-1]
+    equipment.name = sc_soup.find_all("h1", {"class": "font-sans font-bold text-5xl m-0 p-0"})[0].text
     mh, oh, ring, accessory = 1, 1, 1, 1
     items = {}
     for i in range(0, len(table_data), 2):
