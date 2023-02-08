@@ -12,6 +12,13 @@ def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment)
         # If items exist we can also check if upgrades match
         reference_item: Item = reference_equipment.items[slot]
         player_item: Item = player_equipment.items[slot]
+
+        if len(player_item.upgrades) < len(reference_item.upgrades):
+            fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
+                             f"It needs a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
+                             FeedbackLevel.ERROR))
+            continue
+
         sc_upgrades = reference_item.upgrades.copy()
         player_upgrades = player_item.upgrades.copy()
         for player_upgrade in player_upgrades:
@@ -20,8 +27,9 @@ def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment)
                     sc_upgrades.remove(sc_upgrade)
                     player_upgrades.remove(player_upgrade)
         if len(sc_upgrades) != 0 or len(player_upgrades) != 0:
-            fbg.add(Feedback(f"Your {player_item.name} has a {' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
-                             f" instead of {' and '.join(f'{upgrade}' for upgrade in sc_upgrades)}", FeedbackLevel.WARNING))
+            fbg.add(Feedback(f"Your {player_item.type} has a {' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
+                             f" instead of a {' and '.join(f'{upgrade}' for upgrade in sc_upgrades)}",
+                             FeedbackLevel.WARNING))
 
     if fbg.level <= FeedbackLevel.WARNING:
         fbg.add(Feedback(f"All items are at least ascended", FeedbackLevel.SUCCESS))
@@ -41,7 +49,7 @@ def compare_armor(player_equipment: Equipment, reference_equipment: Equipment) -
         player_item: Item = player_equipment.items[slot]
         reference_item: Item = reference_equipment.items[slot]
         if player_item.upgrades[0].id != reference_item.upgrades[0].id:
-            fbg.add(Feedback(f"Your {player_item.name} has a {player_item.upgrades[0].name} but should have a "
+            fbg.add(Feedback(f"Your {player_item.type} has a {player_item.upgrades[0].name} but should have a "
                              f"{reference_item.upgrades[0].name}", FeedbackLevel.WARNING))
 
     if fbg.level <= FeedbackLevel.WARNING:
@@ -72,16 +80,16 @@ def compare_item(slot: str,
         return False
     reference_item: Item = reference_equipment.items[slot]
     if slot not in player_equipment.items:
-        fbg.add(Feedback(f"{reference_item.name} is missing", FeedbackLevel.ERROR))
+        fbg.add(Feedback(f"{reference_item.type} is missing", FeedbackLevel.ERROR))
         return False
     player_item: Item = player_equipment.items[slot]
 
     # Compare Item stats
     if player_item.stats.name != reference_item.stats.name:
-        fbg.add(Feedback(f"Your '{player_item.stats.name} {player_item.name}' should be {reference_item.stats.name}",
+        fbg.add(Feedback(f"Your {player_item.stats.name} {player_item.type} should be {reference_item.stats.name}",
                          FeedbackLevel.WARNING))
 
     # Check rarity
     if player_item.rarity < min_rarity:
-        fbg.add(Feedback(f"Your {player_item.name} has to be at least {min_rarity}", FeedbackLevel.ERROR))
+        fbg.add(Feedback(f"Your {player_item.type} has to be at least {min_rarity}", FeedbackLevel.ERROR))
     return True

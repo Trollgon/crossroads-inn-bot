@@ -69,6 +69,12 @@ async def get_sc_equipment(api: API, url: str):
             accessory += 1
         if slot == "Backpiece":
             slot = "Backpack"
+
+        if "type" in item_data["details"]:
+            item.type = item_data["details"]["type"]
+        else:
+            item.type = slot
+
         items[slot] = item
     equipment.items = items
     return equipment

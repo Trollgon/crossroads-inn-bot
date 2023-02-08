@@ -12,7 +12,10 @@ class API:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         async with aiohttp.ClientSession() as session:
             async with session.get(url=url, headers=headers) as resp:
-                return await resp.json()
+                if resp.status == 200:
+                    return await resp.json()
+                else:
+                    raise Exception(f"{resp.status}: {await resp.text()}")
 
     async def check_key(self) -> FeedbackGroup:
         fbg = FeedbackGroup("API Key")

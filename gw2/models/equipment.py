@@ -29,6 +29,11 @@ async def get_equipment(api: API, character: str, tab: int = 1):
         item.name = item_data["name"]
         item.rarity = Rarity(item_data["rarity"])
 
+        if "type" in item_data["details"]:
+            item.type = item_data["details"]["type"]
+        else:
+            item.type = equipment_tab_item["slot"]
+
         stats = Stats()
         if "stats" in equipment_tab_item:
             stats.id = equipment_tab_item["stats"]["id"]
@@ -78,21 +83,21 @@ class Equipment:
         value = ""
         for slot in ITEM_SLOT_WHITELIST[4:10]:
             if slot in self.items:
-                value += f"{self.items[slot].stats} {slot} ({self.items[slot].upgrades[0]})\n"
+                value += f"{self.items[slot].stats} {self.items[slot].type} ({self.items[slot].upgrades[0]})\n"
         embed.add_field(name="Armor", value=value, inline=False)
 
         # Trinkets
         value = ""
         for slot in ITEM_SLOT_WHITELIST[10:]:
             if slot in self.items:
-                value += f"{self.items[slot].stats} {slot}\n"
+                value += f"{self.items[slot].stats} {self.items[slot].type}\n"
         embed.add_field(name="Trinkets", value=value, inline=False)
 
         # Weapons
         value = ""
         for slot in ITEM_SLOT_WHITELIST[:4]:
             if slot in self.items:
-                value += f"{self.items[slot].stats} {slot} ({', '.join(f'{upgrade}' for upgrade in self.items[slot].upgrades)})\n"
+                value += f"{self.items[slot].stats} {self.items[slot].type} ({', '.join(f'{upgrade}' for upgrade in self.items[slot].upgrades)})\n"
         embed.add_field(name="Weapons", value=value, inline=False)
         return embed
 
@@ -141,6 +146,7 @@ class Upgrade:
 class Item:
     id: int = None
     name: str = "None"
+    type: str = "None"
     rarity: Rarity = None
     stats: Stats = None
     upgrades: list[Upgrade] = []
