@@ -77,6 +77,9 @@ class RegistrationView(discord.ui.View):
                                   f"{FeedbackLevel.SUCCESS.emoji} Success:** You have the correct gear\n"
                                   f"{FeedbackLevel.WARNING.emoji} **Warning:** Gear does not exactly match the selected build\n"
                                   f"{FeedbackLevel.ERROR.emoji} **Error:** You need to fix these before you can apply\n")
+        # Add additional whitespace for better separation
+        embed.add_field(name=" ", value="", inline=False)
+
         fbc = FeedbackCollection()
         fbc.add(compare_armor(player_equipment, reference_equipment))
         fbc.add(compare_trinkets(player_equipment, reference_equipment))
