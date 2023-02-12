@@ -16,7 +16,8 @@ async def get_sc_equipment(api: API, url: str):
     table_data = sc_soup.find_all("td")
 
     equipment = Equipment()
-    equipment.name = sc_soup.find_all("h1", {"class": "font-sans font-bold text-5xl m-0 p-0"})[0].text
+    equipment.name = f"[{sc_soup.find_all('h1', {'class': 'font-sans font-bold text-5xl m-0 p-0'})[0].text}]" \
+                     f"(https://snowcrows.com{url})"
     mh, oh, ring, accessory = 1, 1, 1, 1
     items = {}
     for i in range(0, len(table_data), 2):

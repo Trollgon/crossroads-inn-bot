@@ -5,7 +5,7 @@ from gw2.api import API
 from cogs.views.Registration import RegistrationView
 from gw2.models.feedback import *
 from gw2.models.equipment import get_equipment, Equipment
-from gw2.snowcrows import add_build, remove_build, get_builds
+from gw2.snowcrows import get_builds
 
 professions = typing.Literal[
     "Guardian", "Warrior", "Revenant",
@@ -18,6 +18,7 @@ class UserCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @app_commands.guild_only
     @app_commands.command(name="register")
     async def register(self, interaction: Interaction, api_key: str, character: str):
         # Defer to prevent interaction timeout
@@ -54,14 +55,17 @@ class UserCommands(commands.Cog):
             failed_registration = True
 
         if failed_registration:
-            embed.add_field(name=f"{FeedbackLevel.WARNING.emoji} Please fix these errors and apply again.", value="", inline=False)
+            embed.colour = discord.Colour.red()
+            embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please fix these errors and apply again.", value="", inline=False)
             await interaction.followup.send(embed=embed)
         else:
+            embed.colour = discord.Colour.green()
             await interaction.followup.send(embed=embed)
             view = RegistrationView(self.bot, api, character)
             await view.init()
             await interaction.edit_original_response(embed=embed, view=view)
 
+    @app_commands.guild_only
     @app_commands.command(name="gear")
     async def gear(self, interaction: Interaction, api_key: str, character: str, template: int):
         # Defer to prevent interaction timeout
@@ -72,34 +76,14 @@ class UserCommands(commands.Cog):
 
         await interaction.followup.send(embed=equipment.to_embed())
 
+    @app_commands.guild_only
     @app_commands.command(name="builds")
     async def builds(self, interaction: Interaction, profession: typing.Optional[professions]):
         builds = get_builds(profession)
         embed = Embed(title="Builds")
         for profession in builds:
-            print(type(builds[profession]))
             value = ""
             for build in builds[profession]:
                 value += f"[{build}](https://snowcrows.com{builds[profession][build]})\n"
             embed.add_field(name=profession, value=value)
         await interaction.response.send_message(embed=embed)
-
-    build = app_commands.Group(name="build", description="Add and remove builds")
-
-    @build.command(name="add")
-    async def build_add(self, interaction: Interaction, snowcrows_url: str):
-        if not snowcrows_url.startswith("https://snowcrows.com"):
-            await interaction.response.send_message("Invalid url", ephemeral=True)
-            return
-
-        await add_build(url=snowcrows_url.replace("https://snowcrows.com", ""))
-        await interaction.response.send_message("Build was added", ephemeral=True)
-
-    @build.command(name="remove")
-    async def build_remove(self, interaction: Interaction, snowcrows_url: str):
-        if not snowcrows_url.startswith("https://snowcrows.com"):
-            await interaction.response.send_message("Invalid url", ephemeral=True)
-            return
-
-        remove_build(url=snowcrows_url.replace("https://snowcrows.com", ""))
-        await interaction.response.send_message("Build was removed", ephemeral=True)

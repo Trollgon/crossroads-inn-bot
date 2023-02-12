@@ -81,4 +81,7 @@ class FeedbackCollection:
     def to_embed(self, embed: Embed = Embed(title="Feedback"), inline: bool = False) -> Embed:
         for fb in self.feedback:
             fb.to_embed(embed, inline)
+            if not inline:
+                # Add additional whitespace for better separation
+                embed.add_field(name=" ", value="", inline=False)
         return embed

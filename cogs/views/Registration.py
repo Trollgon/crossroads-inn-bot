@@ -73,7 +73,10 @@ class RegistrationView(discord.ui.View):
         player_equipment = await get_equipment(self.api, self.character, int(self.equipment_tabs_select.values[0]))
 
         embed = Embed(title="Gearcheck Feedback",
-                      description=f"Comparing equipment tab {player_equipment.name} to {reference_equipment.name}")
+                      description=f"**Comparing equipment tab {player_equipment.name} to {reference_equipment.name}\n\n"
+                                  f"{FeedbackLevel.SUCCESS.emoji} Success:** You have the correct gear\n"
+                                  f"{FeedbackLevel.WARNING.emoji} **Warning:** Gear does not exactly match the selected build\n"
+                                  f"{FeedbackLevel.ERROR.emoji} **Error:** You need to fix these before you can apply\n")
         fbc = FeedbackCollection()
         fbc.add(compare_armor(player_equipment, reference_equipment))
         fbc.add(compare_trinkets(player_equipment, reference_equipment))
@@ -82,14 +85,20 @@ class RegistrationView(discord.ui.View):
 
         match fbc.level:
             case FeedbackLevel.SUCCESS:
+                embed.colour = discord.Colour.green()
                 await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(T1_ROLE_ID))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await interaction.followup.send(embed=embed)
 
             case FeedbackLevel.WARNING:
-                await interaction.followup.send(embed=embed, view=SimpleButtonView("Request Manual Review", request_equipment_review, player_equipment, self.bot))
+                embed.colour = discord.Colour.yellow()
+                embed.add_field(name=f"{FeedbackLevel.WARNING.emoji} You did not pass the automatic gear check "
+                                     f"but you can request a manual gear check. Use this if you are using a different "
+                                     f"gear setup than Snowcrows.", value="")
+                await interaction.followup.send(embed=embed, view=SimpleButtonView("Request Manual Review", request_equipment_review, player_equipment, self.bot, reference_equipment.name))
 
             case FeedbackLevel.ERROR:
+                embed.colour = discord.Colour.red()
                 embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please fix all of the errors in your gear and try again.", value="")
                 await interaction.followup.send(embed=embed)
 
@@ -108,7 +117,8 @@ class RegistrationView(discord.ui.View):
         return True
 
 
-async def request_equipment_review(interaction: Interaction, equipment: Equipment, bot: commands.Bot):
+async def request_equipment_review(interaction: Interaction, equipment: Equipment, bot: commands.Bot, build: str):
     embed = Embed(title="Equipment Review",
-                  description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.")
+                  description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.\n\n"
+                              f"**Build:** {build}")
     await bot.get_channel(RR_CHANNEL_ID).send(embed=equipment.to_embed(embed))
