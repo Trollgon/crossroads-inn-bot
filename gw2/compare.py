@@ -43,13 +43,13 @@ def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment)
                 continue
 
             # Compare upgrades. Order of upgrades doesn't matter
-            sc_upgrades = reference_item.upgrades.copy()
-            player_upgrades = player_item.upgrades.copy()
-            for player_upgrade in player_upgrades:
-                for sc_upgrade in sc_upgrades:
-                    if int(sc_upgrade.id) == int(player_upgrade.id):
-                        sc_upgrades.remove(sc_upgrade)
-                        player_upgrades.remove(player_upgrade)
+            sc_upgrades = [upgrade.name for upgrade in reference_item.upgrades]
+            player_upgrades = [upgrade.name for upgrade in player_item.upgrades]
+            for sc_upgrade in player_item.upgrades:
+                if sc_upgrade.name in player_upgrades:
+                    player_upgrades.remove(sc_upgrade.name)
+                    sc_upgrades.remove(sc_upgrade.name)
+
             if len(sc_upgrades) != 0 or len(player_upgrades) != 0:
                 fbg.add(Feedback(f"Your {player_item.type} has a {' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
                                  f" instead of a {' and '.join(f'{upgrade}' for upgrade in sc_upgrades)}",
