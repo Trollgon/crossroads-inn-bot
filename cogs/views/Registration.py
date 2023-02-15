@@ -1,6 +1,6 @@
 import discord
 from discord import Interaction
-from gw2.snowcrows import get_sc_builds, get_sc_equipment, get_builds
+from gw2.snowcrows import get_sc_equipment, get_builds
 from gw2.compare import *
 from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
@@ -17,8 +17,9 @@ class SimpleDropdown(discord.ui.Select):
 
 
 class SimpleButtonView(discord.ui.View):
-    def __init__(self, title, func, *args):
+    def __init__(self, title, original_message: discord.InteractionMessage, func, *args):
         super().__init__()
+        self.original_message = original_message
         self.func = func
         self.args = args
         self.children[0].label = title
@@ -27,19 +28,20 @@ class SimpleButtonView(discord.ui.View):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Disable button
         button.disabled = True
-        await interaction.message.edit(view=self)
+        await self.original_message.edit(view=self)
         self.stop()
 
         await self.func(interaction, *self.args)
-        await interaction.response.send_message(f"{FeedbackLevel.SUCCESS.emoji} The manual gearcheck was requested")
+        await interaction.response.send_message(f"{FeedbackLevel.SUCCESS.emoji} The manual gearcheck was requested", ephemeral=True)
 
 
 class RegistrationView(discord.ui.View):
-    def __init__(self, bot: commands.Bot, api: API, character: str):
+    def __init__(self, bot: commands.Bot, api: API, character: str, original_message: discord.InteractionMessage):
         super().__init__()
         self.bot = bot
         self.api = api
         self.character = character
+        self.original_message = original_message
 
         self.equipment_tabs_select = SimpleDropdown(placeholder="Select your equipment template")
         self.sc_build_select = SimpleDropdown(placeholder="Select your build")
@@ -64,18 +66,19 @@ class RegistrationView(discord.ui.View):
         # Disable buttons so it cant be pressed twice
         for child in self.children:
             child.disabled = True
-        await interaction.message.edit(view=self)
+        await self.original_message.edit(view=self)
 
         # Defer to prevent timeouts
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer()
 
         reference_equipment = await get_sc_equipment(self.api, self.sc_build_select.values[0])
         player_equipment = await get_equipment(self.api, self.character, int(self.equipment_tabs_select.values[0]))
 
         embed = Embed(title="Gearcheck Feedback",
-                      description=f"**Comparing equipment tab {player_equipment.name} to {reference_equipment.name}\n\n"
-                                  f"{FeedbackLevel.SUCCESS.emoji} Success:** You have the correct gear\n"
-                                  f"{FeedbackLevel.WARNING.emoji} **Warning:** Gear does not exactly match the selected build\n"
+                      description=f"**Comparing equipment tab {player_equipment.name} to {reference_equipment.name}**\n"
+                                  f"If your gear is not showing up correctly please equip the equipment template you selected\n\n"
+                                  f"{FeedbackLevel.SUCCESS.emoji} **Success:** You have the correct gear\n"
+                                  f"{FeedbackLevel.WARNING.emoji} **Warning:** Gear does not completely match the selected build\n"
                                   f"{FeedbackLevel.ERROR.emoji} **Error:** You need to fix these before you can apply\n")
         # Add additional whitespace for better separation
         embed.add_field(name=" ", value="", inline=False)
@@ -91,19 +94,24 @@ class RegistrationView(discord.ui.View):
                 embed.colour = discord.Colour.green()
                 await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(T1_ROLE_ID))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
-                await interaction.followup.send(embed=embed)
+                await self.original_message.edit(embed=embed, view=None)
 
             case FeedbackLevel.WARNING:
                 embed.colour = discord.Colour.yellow()
                 embed.add_field(name=f"{FeedbackLevel.WARNING.emoji} You did not pass the automatic gear check "
                                      f"but you can request a manual gear check. Use this if you are using a different "
                                      f"gear setup than Snowcrows.", value="")
-                await interaction.followup.send(embed=embed, view=SimpleButtonView("Request Manual Review", request_equipment_review, player_equipment, self.bot, reference_equipment.name))
+                await self.original_message.edit(embed=embed, view=SimpleButtonView("Request Manual Review",
+                                                                                    self.original_message,
+                                                                                    request_equipment_review,
+                                                                                    player_equipment,
+                                                                                    self.bot,
+                                                                                    reference_equipment.name))
 
             case FeedbackLevel.ERROR:
                 embed.colour = discord.Colour.red()
                 embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please fix all of the errors in your gear and try again.", value="")
-                await interaction.followup.send(embed=embed)
+                await self.original_message.edit(embed=embed, view=None)
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
         # Enable submit button if both selects have a value selected
@@ -116,7 +124,7 @@ class RegistrationView(discord.ui.View):
             for opt in self.sc_build_select.options:
                 opt.default = opt.value in self.sc_build_select.values
             # Update view
-            await interaction.message.edit(view=self)
+            await self.original_message.edit(view=self)
         return True
 
 

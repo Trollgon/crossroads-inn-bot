@@ -22,7 +22,7 @@ class UserCommands(commands.Cog):
     @app_commands.command(name="register")
     async def register(self, interaction: Interaction, api_key: str, character: str):
         # Defer to prevent interaction timeout
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
 
         # Create embed
         embed = Embed(title="Application", color=0x0099ff)
@@ -60,8 +60,8 @@ class UserCommands(commands.Cog):
             await interaction.followup.send(embed=embed)
         else:
             embed.colour = discord.Colour.green()
-            await interaction.followup.send(embed=embed)
-            view = RegistrationView(self.bot, api, character)
+            msg = await interaction.followup.send(embed=embed)
+            view = RegistrationView(self.bot, api, character, msg)
             await view.init()
             await interaction.edit_original_response(embed=embed, view=view)
 
