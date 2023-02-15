@@ -6,7 +6,6 @@ from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
 from discord.ext import commands
 
-
 RR_CHANNEL_ID = 1072617994565455966
 T1_ROLE_ID = 1072652111709491200
 
@@ -35,7 +34,7 @@ class SimpleButtonView(discord.ui.View):
         await interaction.response.send_message(f"{FeedbackLevel.SUCCESS.emoji} The manual gearcheck was requested", ephemeral=True)
 
 
-class RegistrationView(discord.ui.View):
+class ApplicationView(discord.ui.View):
     def __init__(self, bot: commands.Bot, api: API, character: str, original_message: discord.InteractionMessage):
         super().__init__()
         self.bot = bot

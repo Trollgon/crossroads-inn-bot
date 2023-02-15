@@ -1,8 +1,9 @@
+import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
 from gw2.api import API
-from cogs.views.Registration import RegistrationView
+from cogs.views.application import ApplicationView
 from gw2.models.feedback import *
 from gw2.models.equipment import get_equipment, Equipment
 from gw2.snowcrows import get_builds
@@ -61,7 +62,7 @@ class UserCommands(commands.Cog):
         else:
             embed.colour = discord.Colour.green()
             msg = await interaction.followup.send(embed=embed)
-            view = RegistrationView(self.bot, api, character, msg)
+            view = ApplicationView(self.bot, api, character, msg)
             await view.init()
             await interaction.edit_original_response(embed=embed, view=view)
 

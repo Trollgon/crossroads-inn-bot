@@ -7,9 +7,16 @@ class API:
     def __init__(self, api_key: str = None, version: str = "2021-07-24T00%3A00%3A00Z"):
         self.api_key = api_key
         self.version = version
+
+        self.headers = {}
+        if self.api_key:
+            self.headers["Authorization"] = f"Bearer {self.api_key}"
+        if self.version:
+            self.headers["X-Schema-Version"] = self.version
+
         self.cache = SQLiteBackend(
             cache_name="aiohttp-cache.db",
-            allowed_codes=(200, 418),
+            allowed_codes=(200,),
             urls_expire_after={
                 "https://api.guildwars2.com/v2/items": 60*60*24,        # Cache items for 24h
                 "https://api.guildwars2.com/v2/itemstats": 60*60*24,    # Cache item stats for 24h
@@ -18,14 +25,9 @@ class API:
 
     async def get_endpoint_v2(self, endpoint: str):
         url = f"https://api.guildwars2.com/v2/{endpoint}"
-        headers = {}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-        if self.version:
-            headers["X-Schema-Version"] = self.version
         async with CachedSession(cache=self.cache) as session:
-            resp = await session.get(url, headers=headers)
-            if resp.status == 200:
+            resp = await session.get(url, headers=self.headers)
+            if resp.status in (200, 401):
                 return await resp.json()
             else:
                 raise Exception(f"{resp.url} {resp.status}: {await resp.text()}")

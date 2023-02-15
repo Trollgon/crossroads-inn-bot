@@ -2,13 +2,20 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 import typing
 from gw2.snowcrows import add_build, remove_build
+from cogs.views.application_overview import ApplicationOverview
 
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.command("prepare")
+    @commands.is_owner()
+    async def prepare(self, ctx: commands.Context):
+        await ctx.send(view=ApplicationOverview(self.bot))
+
     @commands.command("sync")
+    @commands.is_owner()
     async def sync(self, ctx: commands.Context, sync_global: typing.Optional[bool] = False) -> None:
         if sync_global:
             await self.bot.tree.sync()
