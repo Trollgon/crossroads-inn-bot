@@ -28,6 +28,7 @@ async def get_equipment(api: API, character: str, tab: int = 1):
         item_data = await api.get_item(equipment_tab_item['id'])
         item.name = item_data["name"]
         item.rarity = Rarity(item_data["rarity"])
+        item.level = item_data["level"]
 
         if "type" in item_data["details"]:
             item.type = item_data["details"]["type"]
@@ -149,6 +150,7 @@ class Item:
     type: str = "None"
     rarity: Rarity = None
     stats: Stats = None
+    level: int = None
     upgrades: list[Upgrade] = []
 
     def __str__(self):

@@ -133,6 +133,10 @@ def compare_item(slot: str,
     # Check rarity
     if player_item.rarity < min_rarity:
         fbg.add(Feedback(f"Your {player_item.type} has to be at least {min_rarity}", FeedbackLevel.ERROR))
+
+    # Check level
+    if player_item.level < 80:
+        fbg.add(Feedback(f"Your {player_item.type} has to be a level 80 item", FeedbackLevel.ERROR))
     return True
 
 

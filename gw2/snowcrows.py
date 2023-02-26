@@ -27,6 +27,7 @@ async def get_sc_equipment(api: API, url: str):
         item_data = await api.get_item(item.id)
         item.name = item_data["name"]
         item.rarity = Rarity(item_data["rarity"])
+        item.level = item_data["level"]
 
         if item_data["type"] == "UpgradeComponent":
             break
