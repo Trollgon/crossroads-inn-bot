@@ -1,5 +1,5 @@
 import discord
-from discord import Interaction, Embed
+from discord import Interaction
 from gw2.models.feedback import *
 from gw2.api import API
 from cogs.views.application import ApplicationView
@@ -15,6 +15,11 @@ class ApplicationOverview(discord.ui.View):
     async def apply_t1(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
+    async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
+        # Send message to user and log error
+        await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
+        await super().on_error(interaction, error, item)
+
 
 class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
     api_key: str = discord.ui.TextInput(label="API Key")
@@ -29,7 +34,7 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
         await interaction.response.defer(ephemeral=True)
 
         # Create embed
-        embed = Embed(title="Application", color=0x0099ff)
+        embed = Embed(title="Tier 1 Application", color=0x0099ff)
         failed_registration = False
 
         # Check API Key

@@ -32,6 +32,11 @@ class SimpleButtonView(discord.ui.View):
         await self.func(interaction, *self.args)
         await interaction.response.send_message(f"{FeedbackLevel.SUCCESS.emoji} The manual gearcheck was requested", ephemeral=True)
 
+    async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
+        # Send message to user and log error
+        await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
+        await super().on_error(interaction, error, item)
+
 
 class ApplicationView(discord.ui.View):
     def __init__(self, bot: commands.Bot, api: API, character: str, original_message: discord.InteractionMessage):
@@ -122,6 +127,11 @@ class ApplicationView(discord.ui.View):
             # Update view
             await self.original_message.edit(view=self)
         return True
+
+    async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
+        # Send message to user and log error
+        await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
+        await super().on_error(interaction, error, item)
 
 
 async def request_equipment_review(interaction: Interaction, equipment: Equipment, bot: commands.Bot, build: str):
