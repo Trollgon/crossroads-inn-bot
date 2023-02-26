@@ -5,9 +5,7 @@ from gw2.compare import *
 from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
 from discord.ext import commands
-
-RR_CHANNEL_ID = 1072617994565455966
-T1_ROLE_ID = 1072652111709491200
+from config import *
 
 
 class SimpleDropdown(discord.ui.Select):
