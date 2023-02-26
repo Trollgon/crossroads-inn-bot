@@ -6,6 +6,7 @@ from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
 from discord.ext import commands
 from config import *
+from cogs.logging import log_gear_check
 
 
 class SimpleDropdown(discord.ui.Select):
@@ -59,7 +60,7 @@ class ApplicationView(discord.ui.View):
         self.add_item(self.sc_build_select)
 
     @discord.ui.button(label="Submit", style=discord.ButtonStyle.green, row=2, disabled=True)
-    async def search(self, interaction: Interaction, button: discord.ui.Button):
+    async def submit(self, interaction: Interaction, button: discord.ui.Button):
         # Disable buttons so it cant be pressed twice
         for child in self.children:
             child.disabled = True
@@ -92,18 +93,16 @@ class ApplicationView(discord.ui.View):
                 await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(T1_ROLE_ID))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await self.original_message.edit(embed=embed, view=None)
+                await log_gear_check(self.bot, interaction, player_equipment, reference_equipment)
 
             case FeedbackLevel.WARNING:
                 embed.colour = discord.Colour.yellow()
                 embed.add_field(name=f"{FeedbackLevel.WARNING.emoji} You did not pass the automatic gear check "
                                      f"but you can request a manual gear check. Use this if you are using a different "
                                      f"gear setup than Snowcrows.", value="")
-                await self.original_message.edit(embed=embed, view=SimpleButtonView("Request Manual Review",
-                                                                                    self.original_message,
-                                                                                    request_equipment_review,
-                                                                                    player_equipment,
-                                                                                    self.bot,
-                                                                                    reference_equipment.name))
+                view = SimpleButtonView("Request Manual Review", self.original_message, request_equipment_review,
+                                        player_equipment, self.bot, reference_equipment.name)
+                await self.original_message.edit(embed=embed, view=view)
 
             case FeedbackLevel.ERROR:
                 embed.colour = discord.Colour.red()
