@@ -37,10 +37,17 @@ def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment)
 
             # Check if upgrades exist
             if len(player_item.upgrades) < len(reference_item.upgrades):
-                fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
-                                 f"It needs a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
-                                 FeedbackLevel.ERROR))
-                continue
+                # Legendary weapons sometimes show up without a sigil
+                if player_item.rarity == Rarity("Legendary"):
+                    fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
+                                     f"It should have a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
+                                     FeedbackLevel.WARNING))
+                    continue
+                else:
+                    fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
+                                     f"It needs a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
+                                     FeedbackLevel.ERROR))
+                    continue
 
             # Compare upgrades. Order of upgrades doesn't matter
             sc_upgrades = [upgrade.name for upgrade in reference_item.upgrades]
