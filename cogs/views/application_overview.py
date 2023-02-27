@@ -1,9 +1,9 @@
-import discord
 from discord import Interaction
 from gw2.models.feedback import *
 from gw2.api import API
 from cogs.views.application import ApplicationView
 from discord.ext import commands
+from config import T1_ROLE_ID, T2_ROLE_ID, T3_ROLE_ID
 
 
 class ApplicationOverview(discord.ui.View):
@@ -13,6 +13,10 @@ class ApplicationOverview(discord.ui.View):
 
     @discord.ui.button(label='Apply Tier 1', style=discord.ButtonStyle.primary, custom_id='persistent_view:t1')
     async def apply_t1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        for role in interaction.user.roles:
+            if role.id in [T1_ROLE_ID, T2_ROLE_ID, T3_ROLE_ID]:
+                await interaction.response.send_message(ephemeral=True, content="You are already Tier 1 or above.")
+                return
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
