@@ -1,8 +1,14 @@
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
-from gw2.snowcrows import add_build, remove_build
+from gw2.snowcrows import add_build, remove_build, get_builds
 from cogs.views.application_overview import ApplicationOverview
+
+professions = typing.Literal[
+    "Guardian", "Warrior", "Revenant",
+    "Engineer", "Ranger", "Thief",
+    "Elementalist", "Mesmer", "Necromancer"
+]
 
 
 class AdminCommands(commands.Cog):
@@ -25,6 +31,20 @@ class AdminCommands(commands.Cog):
             self.bot.tree.copy_global_to(guild=ctx.guild)
             await self.bot.tree.sync(guild=ctx.guild)
             await ctx.send("Synced commands to this guild")
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.command(name="builds")
+    async def builds(self, interaction: Interaction, profession: typing.Optional[professions]):
+        builds = get_builds(profession)
+        embed = Embed(title="Builds")
+        for profession in builds:
+            value = ""
+            for build in builds[profession]:
+                value += f"[{build}](https://snowcrows.com{builds[profession][build]})\n"
+            embed.add_field(name=profession, value=value)
+        await interaction.response.send_message(embed=embed)
 
     build = app_commands.Group(name="build", description="Add and remove builds")
 
