@@ -98,7 +98,6 @@ class ApplicationView(discord.ui.View):
                 await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(T1_ROLE_ID))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await self.original_message.edit(embed=embed, view=None)
-                await log_gear_check(self.bot, interaction, player_equipment, reference_equipment)
 
             case FeedbackLevel.WARNING:
                 embed.colour = discord.Colour.yellow()
@@ -113,6 +112,8 @@ class ApplicationView(discord.ui.View):
                 embed.colour = discord.Colour.red()
                 embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please fix all of the errors in your gear and try again.", value="")
                 await self.original_message.edit(embed=embed, view=None)
+
+        await log_gear_check(self.bot, interaction, player_equipment, reference_equipment, fbc.level)
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
         # Enable submit button if both selects have a value selected
@@ -130,7 +131,7 @@ class ApplicationView(discord.ui.View):
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
         # Send message to user and log error
-        await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
+        await self.original_message.edit(content="An unknown error occured. Please try again later.")
         await super().on_error(interaction, error, item)
 
 

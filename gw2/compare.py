@@ -45,7 +45,7 @@ def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment)
             # Compare upgrades. Order of upgrades doesn't matter
             sc_upgrades = [upgrade.name for upgrade in reference_item.upgrades]
             player_upgrades = [upgrade.name for upgrade in player_item.upgrades]
-            for sc_upgrade in player_item.upgrades:
+            for sc_upgrade in reference_item.upgrades:
                 if sc_upgrade.name in player_upgrades:
                     player_upgrades.remove(sc_upgrade.name)
                     sc_upgrades.remove(sc_upgrade.name)

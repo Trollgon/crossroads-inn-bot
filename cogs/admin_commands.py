@@ -1,4 +1,4 @@
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
 from gw2.snowcrows import add_build, remove_build
@@ -12,7 +12,8 @@ class AdminCommands(commands.Cog):
     @commands.command("prepare")
     @commands.is_owner()
     async def prepare(self, ctx: commands.Context):
-        await ctx.send(view=ApplicationOverview(self.bot))
+        embed = Embed(title="Tier Application", description="Press button below to apply")
+        await ctx.send(view=ApplicationOverview(self.bot), embed=embed)
 
     @commands.command("sync")
     @commands.is_owner()

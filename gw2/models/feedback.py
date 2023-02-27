@@ -1,4 +1,5 @@
 from enum import Enum
+import discord
 from discord import Embed
 from cogs.utils import split_embed
 
@@ -17,6 +18,16 @@ class FeedbackLevel(Enum):
                 return ":warning:"
             case 3:
                 return ":x:"
+
+    @property
+    def colour(self) -> discord.Colour:
+        match self.value:
+            case 1:
+                return discord.Colour.green()
+            case 2:
+                return discord.Colour.yellow()
+            case 3:
+                return discord.Colour.red()
 
     def __lt__(self, other):
         if self.value < other.value:
