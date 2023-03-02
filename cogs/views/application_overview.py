@@ -27,7 +27,7 @@ class ApplicationOverview(discord.ui.View):
 
 class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
     api_key: str = discord.ui.TextInput(label="API Key")
-    character: str = discord.ui.TextInput(label="Character Name")
+    character: str = discord.ui.TextInput(label="Character Name", min_length=3, max_length=19)
 
     def __init__(self, bot: commands.Bot):
         super().__init__()

@@ -1,6 +1,7 @@
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
+import config
 from gw2.snowcrows import add_build, remove_build, get_builds
 from cogs.views.application_overview import ApplicationOverview
 
@@ -15,11 +16,43 @@ class AdminCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command("prepare")
-    @commands.is_owner()
-    async def prepare(self, ctx: commands.Context):
-        embed = Embed(title="Tier Application", description="Press button below to apply")
-        await ctx.send(view=ApplicationOverview(self.bot), embed=embed)
+    @app_commands.guild_only
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="init")
+    async def init(self, interaction: Interaction):
+        # Stop old view if it exists
+        for view in self.bot.persistent_views:
+            if type(view) == ApplicationOverview:
+                view.stop()
+
+        embed = Embed(title="Tier Application Bot",
+                      description="You can use this bot to apply for Tiers on this server. "
+                                  f"Currently only supports {interaction.guild.get_role(config.T1_ROLE_ID).name}."
+                      )
+        embed.set_author(name=self.bot.user.display_name,
+                         icon_url=self.bot.user.avatar.url if self.bot.user.avatar else None)
+        embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
+        embed.add_field(name=" ", value="", inline=False)
+        embed.add_field(name="How to use",
+                        value="1. Press the button below to start the application process\n"
+                              "2. Enter your API key and the name of the character that you want to apply with. "
+                              "__The bot will not store your API key__\n"
+                              "3. The bot will check your Mastery and how many bosses you have killed\n"
+                              "4. Select your equipment template and the build you want to apply for\n"
+                              "5. The bot will compare your equipment to the build you selected\n"
+                              "6. If your gear is correct to bot will automatically grant you the role\n",
+                        inline=False)
+        embed.add_field(name=" ", value="", inline=False)
+        embed.add_field(name="How to get your API key",
+                        value="1. Open the [API Key Management](https://account.arena.net/applications) and log into your ArenaNet account.\n"
+                              "2. Press `New Key`\n"
+                              "3. Enter a name for the key\n"
+                              "4. Select the `account`, `characters` and `progression` permission\n"
+                              "5. Press `Create API Key`\n",
+                        inline=False)
+        await interaction.channel.send(view=ApplicationOverview(self.bot), embed=embed)
+        await interaction.response.send_message("Embed initialized", ephemeral=True)
 
     @commands.command("sync")
     @commands.is_owner()
