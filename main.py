@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from cogs.user_commands import UserCommands
 from cogs.admin_commands import AdminCommands
 from gw2.snowcrows import init_builds
 from cogs.views.application_overview import ApplicationOverview
@@ -20,7 +19,6 @@ async def setup_hook():
 async def on_ready():
     print(f"Logged in as {bot.user}")
 
-    await bot.add_cog(UserCommands(bot))
     await bot.add_cog(AdminCommands(bot))
     await init_builds()
 
