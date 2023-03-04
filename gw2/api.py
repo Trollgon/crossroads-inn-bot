@@ -32,10 +32,9 @@ class API:
                 return await resp.json()
             else:
                 if retry > 0:
-                    print(f"{url}: {resp.status}, retrying...")
                     return await self.get_endpoint_v2(endpoint, retry-1)
                 else:
-                    raise Exception(f"{resp.url} {resp.status}: {await resp.text()}")
+                    raise APIException(url, resp.status, await resp.json())
 
     async def check_key(self) -> FeedbackGroup:
         fbg = FeedbackGroup("API Key")
@@ -68,7 +67,7 @@ class API:
         return await self.get_endpoint_v2("characters")
 
     async def get_character_data(self, character_name):
-        return await self.get_endpoint_v2(f"characters?id={character_name}")
+        return await self.get_endpoint_v2(f"characters?id={character_name}a")
 
     async def get_item(self, item_id: int):
         return await self.get_endpoint_v2(f"items/{item_id}")
@@ -144,3 +143,16 @@ class API:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
                              FeedbackLevel.SUCCESS))
         return fbg
+
+
+class APIException(Exception):
+
+    def __init__(self, url: str, response_code: int, response_json: dict):
+        self.url = url
+        self.response_code = response_code
+        self.response_json = response_json
+        if type(response_json) == dict and "text" in response_json:
+            self.response_text = self.response_json["text"]
+        else:
+            self.response_text = "unknown api error"
+        super().__init__(f"{url} {self.response_code}: {self.response_text}")
