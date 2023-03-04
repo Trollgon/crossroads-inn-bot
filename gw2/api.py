@@ -15,22 +15,27 @@ class API:
             self.headers["X-Schema-Version"] = self.version
 
         self.cache = SQLiteBackend(
-            cache_name="aiohttp-cache.db",
+            cache_name="api-cache.db",
             allowed_codes=(200,),
             urls_expire_after={
-                "https://api.guildwars2.com/v2/items": 60*60*24,        # Cache items for 24h
-                "https://api.guildwars2.com/v2/itemstats": 60*60*24,    # Cache item stats for 24h
-                "https://api.guildwars2.com/": 0,                       # Don't cache everything else
+                "https://api.guildwars2.com/v2/items": 60*60*24*7,      # Cache items for 1 week
+                "https://api.guildwars2.com/v2/itemstats": 60*60*24*7,  # Cache item stats for 1 week
+                "https://api.guildwars2.com/v2/characters?id=*": 60,    # Cache characters for 1 min
+                "https://api.guildwars2.com/": 0,                       # Don't cache anything else
             })
 
-    async def get_endpoint_v2(self, endpoint: str):
+    async def get_endpoint_v2(self, endpoint: str, retry: int = 3):
         url = f"https://api.guildwars2.com/v2/{endpoint}"
         async with CachedSession(cache=self.cache) as session:
             resp = await session.get(url, headers=self.headers)
             if resp.status in (200, 401):
                 return await resp.json()
             else:
-                raise Exception(f"{resp.url} {resp.status}: {await resp.text()}")
+                if retry > 0:
+                    print(f"{url}: {resp.status}, retrying...")
+                    return await self.get_endpoint_v2(endpoint, retry-1)
+                else:
+                    raise Exception(f"{resp.url} {resp.status}: {await resp.text()}")
 
     async def check_key(self) -> FeedbackGroup:
         fbg = FeedbackGroup("API Key")
