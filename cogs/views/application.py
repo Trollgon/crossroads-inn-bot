@@ -113,7 +113,7 @@ class ApplicationView(discord.ui.View):
                 embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please fix all of the errors in your gear and try again.", value="")
                 await self.original_message.edit(embed=embed, view=None)
 
-        await log_gear_check(self.bot, interaction, player_equipment, reference_equipment, fbc.level)
+        await log_gear_check(self.bot, interaction, player_equipment, reference_equipment, fbc)
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
         # Enable submit button if both selects have a value selected
