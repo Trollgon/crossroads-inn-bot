@@ -1,3 +1,4 @@
+import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
@@ -28,7 +29,8 @@ class AdminCommands(commands.Cog):
 
         embed = Embed(title="Tier Application Bot",
                       description="You can use this bot to apply for Tiers on this server. "
-                                  f"Currently only supports {interaction.guild.get_role(config.T1_ROLE_ID).name}."
+                                  f"Currently only supports {interaction.guild.get_role(config.T1_ROLE_ID).name}.",
+                      colour=discord.Colour.from_rgb(99, 51, 4)
                       )
         embed.set_author(name=self.bot.user.display_name,
                          icon_url=self.bot.user.avatar.url if self.bot.user.avatar else None)
