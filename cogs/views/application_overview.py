@@ -1,4 +1,6 @@
 from discord import Interaction
+
+from cogs.utils import generate_error_embed
 from gw2.models.feedback import *
 from gw2.api import API
 from cogs.views.application import ApplicationView
@@ -32,6 +34,7 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
     def __init__(self, bot: commands.Bot):
         super().__init__()
         self.bot = bot
+        self.response = None
 
     async def on_submit(self, interaction: Interaction) -> None:
         # Defer to prevent interaction timeout
@@ -77,7 +80,15 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
             embed.colour = discord.Colour.green()
-            msg = await interaction.followup.send(embed=embed, ephemeral=True)
-            view = ApplicationView(self.bot, api, str(self.character), msg)
+            self.response = await interaction.followup.send(embed=embed, ephemeral=True)
+            view = ApplicationView(self.bot, api, str(self.character), self.response)
             await view.init()
-            await msg.edit(embed=embed, view=view)
+            await self.response.edit(embed=embed, view=view)
+
+    async def on_error(self, interaction: Interaction, error: Exception) -> None:
+        if self.response:
+            await self.response.edit(content=None, view=None, embed=generate_error_embed(error))
+        else:
+            await interaction.followup.send(embed=generate_error_embed(error), ephemeral=True)
+        # Log error
+        await super().on_error(interaction, error)

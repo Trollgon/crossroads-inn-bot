@@ -7,6 +7,7 @@ from gw2.models.feedback import *
 from discord.ext import commands
 from config import *
 from cogs.logging import log_gear_check
+from cogs.utils import generate_error_embed
 
 
 class SimpleDropdown(discord.ui.Select):
@@ -33,8 +34,8 @@ class SimpleButtonView(discord.ui.View):
         await interaction.response.send_message(f"{FeedbackLevel.SUCCESS.emoji} The manual gearcheck was requested", ephemeral=True)
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
-        # Send message to user and log error
-        await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
+        await self.original_message.edit(content=None, view=None, embed=generate_error_embed(error))
+        # Log error
         await super().on_error(interaction, error, item)
 
 
@@ -130,8 +131,8 @@ class ApplicationView(discord.ui.View):
         return True
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
-        # Send message to user and log error
-        await self.original_message.edit(content="An unknown error occured. Please try again later.")
+        await self.original_message.edit(content=None, view=None, embed=generate_error_embed(error))
+        # Log error
         await super().on_error(interaction, error, item)
 
 

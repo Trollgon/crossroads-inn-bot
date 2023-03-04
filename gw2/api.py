@@ -1,4 +1,6 @@
 import json
+
+from exceptions import APIException
 from gw2.models.feedback import *
 from aiohttp_client_cache import CachedSession, SQLiteBackend
 
@@ -24,17 +26,14 @@ class API:
                 "https://api.guildwars2.com/": 0,                       # Don't cache anything else
             })
 
-    async def get_endpoint_v2(self, endpoint: str, retry: int = 3):
+    async def get_endpoint_v2(self, endpoint: str):
         url = f"https://api.guildwars2.com/v2/{endpoint}"
         async with CachedSession(cache=self.cache) as session:
             resp = await session.get(url, headers=self.headers)
             if resp.status in (200, 401):
                 return await resp.json()
             else:
-                if retry > 0:
-                    return await self.get_endpoint_v2(endpoint, retry-1)
-                else:
-                    raise APIException(url, resp.status, await resp.json())
+                raise APIException(url, resp.status, await resp.json())
 
     async def check_key(self) -> FeedbackGroup:
         fbg = FeedbackGroup("API Key")
@@ -67,7 +66,7 @@ class API:
         return await self.get_endpoint_v2("characters")
 
     async def get_character_data(self, character_name):
-        return await self.get_endpoint_v2(f"characters?id={character_name}a")
+        return await self.get_endpoint_v2(f"characters?id={character_name}")
 
     async def get_item(self, item_id: int):
         return await self.get_endpoint_v2(f"items/{item_id}")
@@ -143,16 +142,3 @@ class API:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
                              FeedbackLevel.SUCCESS))
         return fbg
-
-
-class APIException(Exception):
-
-    def __init__(self, url: str, response_code: int, response_json: dict):
-        self.url = url
-        self.response_code = response_code
-        self.response_json = response_json
-        if type(response_json) == dict and "text" in response_json:
-            self.response_text = self.response_json["text"]
-        else:
-            self.response_text = "unknown api error"
-        super().__init__(f"{url} {self.response_code}: {self.response_text}")
