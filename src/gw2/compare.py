@@ -93,7 +93,11 @@ def compare_armor(player_equipment: Equipment, reference_equipment: Equipment) -
         # If items exist we can also check if upgrade matches
         player_item: Item = player_equipment.items[slot]
         reference_item: Item = reference_equipment.items[slot]
-        if player_item.upgrades[0].id != reference_item.upgrades[0].id:
+        if reference_item.upgrades[0] and not player_item.upgrades[0]:
+            fbg.add(Feedback(f"Your {player_item.type} is missing a {reference_item.upgrades[0].name}",
+                             FeedbackLevel.WARNING))
+            continue
+        if player_item.upgrades[0].name != reference_item.upgrades[0].name:
             fbg.add(Feedback(f"Your {player_item.type} has a {player_item.upgrades[0].name} but should have a "
                              f"{reference_item.upgrades[0].name}", FeedbackLevel.WARNING))
 
