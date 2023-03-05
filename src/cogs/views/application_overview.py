@@ -37,7 +37,7 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
 
     async def on_submit(self, interaction: Interaction) -> None:
         # Defer to prevent interaction timeout
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer(ephemeral=True, thinking=True)
 
         # Create embed
         embed = Embed(title="Tier 1 Application", color=0x0099ff)
