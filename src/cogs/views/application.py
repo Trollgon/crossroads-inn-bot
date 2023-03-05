@@ -1,11 +1,10 @@
-import discord
+import os
 from discord import Interaction
 from gw2.snowcrows import get_sc_equipment, get_builds
 from gw2.compare import *
 from gw2.models.equipment import get_equipment
 from gw2.models.feedback import *
 from discord.ext import commands
-from config import *
 from cogs.logging import log_gear_check
 from cogs.utils import generate_error_embed
 
@@ -96,7 +95,7 @@ class ApplicationView(discord.ui.View):
         match fbc.level:
             case FeedbackLevel.SUCCESS:
                 embed.colour = discord.Colour.green()
-                await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(T1_ROLE_ID))
+                await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(int(os.getenv("T1_ROLE_ID"))))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await self.original_message.edit(embed=embed, view=None)
 
@@ -140,4 +139,4 @@ async def request_equipment_review(interaction: Interaction, equipment: Equipmen
     embed = Embed(title="Equipment Review",
                   description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.\n\n"
                               f"**Build:** {build}")
-    await bot.get_channel(RR_CHANNEL_ID).send(embed=equipment.to_embed(embed))
+    await bot.get_channel(int(os.getenv("RR_CHANNEL_ID"))).send(embed=equipment.to_embed(embed))

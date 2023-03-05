@@ -1,3 +1,4 @@
+import os
 import discord
 from discord.ext import commands
 from cogs.admin_commands import AdminCommands
@@ -17,10 +18,7 @@ async def setup_hook():
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
-
     await bot.add_cog(AdminCommands(bot))
     await init_builds()
 
-
-bot.run("API_KEY")
+bot.run(os.getenv("DISCORD_TOKEN"))

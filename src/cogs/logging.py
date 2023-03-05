@@ -1,7 +1,7 @@
 import datetime
+import os
 import discord.ext.commands
 from discord import Embed
-from config import LOG_CHANNEL_ID
 from gw2.models.equipment import Equipment
 from gw2.models.feedback import FeedbackCollection
 
@@ -21,4 +21,4 @@ async def log_gear_check(bot: discord.ext.commands.Bot, interaction: discord.Int
 
 async def log_to_channel(bot: discord.ext.commands.Bot, embed: Embed) -> None:
     embed.timestamp = datetime.datetime.now()
-    await bot.get_channel(LOG_CHANNEL_ID).send(embed=embed)
+    await bot.get_channel(int(os.getenv("LOG_CHANNEL_ID"))).send(embed=embed)

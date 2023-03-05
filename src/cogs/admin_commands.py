@@ -1,8 +1,8 @@
+import os
 import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
-import config
 from gw2.snowcrows import add_build, remove_build, get_builds
 from cogs.views.application_overview import ApplicationOverview
 
@@ -29,7 +29,7 @@ class AdminCommands(commands.Cog):
 
         embed = Embed(title="Tier Application Bot",
                       description="You can use this bot to apply for Tiers on this server. "
-                                  f"Currently only supports {interaction.guild.get_role(config.T1_ROLE_ID).name}.",
+                                  f"Currently only supports {interaction.guild.get_role(int(os.getenv('T1_ROLE_ID'))).name}.",
                       colour=discord.Colour.from_rgb(99, 51, 4)
                       )
         embed.set_author(name=self.bot.user.display_name,
