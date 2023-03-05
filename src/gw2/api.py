@@ -1,5 +1,4 @@
 import json
-
 from exceptions import APIException
 from gw2.models.feedback import *
 from aiohttp_client_cache import CachedSession, SQLiteBackend
