@@ -139,5 +139,5 @@ class API:
                              FeedbackLevel.SUCCESS))
         else:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
-                             FeedbackLevel.SUCCESS))
+                             FeedbackLevel.ERROR))
         return fbg
