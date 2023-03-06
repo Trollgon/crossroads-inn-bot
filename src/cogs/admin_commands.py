@@ -79,7 +79,7 @@ class AdminCommands(commands.Cog):
             for build in builds[profession]:
                 value += f"[{build}](https://snowcrows.com{builds[profession][build]})\n"
             embed.add_field(name=profession, value=value)
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     build = app_commands.Group(name="build", description="Add and remove builds")
 
@@ -104,6 +104,8 @@ class AdminCommands(commands.Cog):
             await interaction.response.send_message("Invalid url", ephemeral=True)
             return
 
-        remove_build(url=snowcrows_url.replace("https://snowcrows.com", ""))
-        await interaction.response.send_message("Build was removed", ephemeral=True)
+        if remove_build(url=snowcrows_url.replace("https://snowcrows.com", "")):
+            await interaction.response.send_message("Build was removed", ephemeral=True)
+        else:
+            await interaction.response.send_message("Build not found", ephemeral=True)
 

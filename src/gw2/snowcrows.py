@@ -143,14 +143,14 @@ async def add_build(url: str):
     store_builds(builds)
 
 
-def remove_build(url: str):
+def remove_build(url: str) -> bool:
     builds = get_builds()
     for profession in builds:
         for build in builds[profession]:
             if builds[profession][build] == url:
                 del builds[profession][build]
                 store_builds(builds)
-                return
+                return True
     else:
-        print("build not found")
+        return False
 
