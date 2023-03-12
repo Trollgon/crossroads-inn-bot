@@ -11,3 +11,7 @@ services:
       - T2_ROLE_ID=
       - T3_ROLE_ID=
     restart: always
+    volumes:
+      - type: bind
+        source: src/gw2/builds.json
+        target: /bot/gw2/builds.json
