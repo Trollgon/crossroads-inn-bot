@@ -102,6 +102,13 @@ class Equipment:
         embed.add_field(name="Weapons", value=value, inline=False)
         return embed
 
+    def get_weapons_str(self) -> str:
+        return f"{self.items['WeaponA1'].type if 'WeaponA1' in self.items else 'None'}/"\
+               f"{self.items['WeaponA2'].type if 'WeaponA2' in self.items else 'None'} and " \
+               f"{self.items['WeaponB1'].type if 'WeaponB1' in self.items else 'None'}/" \
+               f"{self.items['WeaponB2'].type if 'WeaponB2' in self.items else 'None'}"
+
+
 
 class Rarity:
     def __init__(self, rarity):

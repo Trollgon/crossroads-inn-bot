@@ -5,81 +5,84 @@ from gw2.models.feedback import *
 
 
 def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment) -> FeedbackGroup:
-    fbg_1 = FeedbackGroup("Weapons")
-    fbg_2 = FeedbackGroup("Weapons")
+    fbg = FeedbackGroup("Weapons")
 
-    # Create a copy of the player equipment with swapped weapons
-    player_equipment_tmp = copy.deepcopy(player_equipment)
-    tmp_1 = player_equipment_tmp.items["WeaponA1"] if "WeaponA1" in player_equipment_tmp.items else None
-    tmp_2 = player_equipment_tmp.items["WeaponA2"] if "WeaponA2" in player_equipment_tmp.items else None
-    player_equipment_tmp.items["WeaponA1"] = player_equipment_tmp.items["WeaponB1"] if "WeaponB1" in player_equipment_tmp.items else None
-    player_equipment_tmp.items["WeaponA2"] = player_equipment_tmp.items["WeaponB2"] if "WeaponB2" in player_equipment_tmp.items else None
-    player_equipment_tmp.items["WeaponB1"] = tmp_1
-    player_equipment_tmp.items["WeaponB2"] = tmp_2
+    # Create dicts of weapons by weapon type
+    player_weapons = {}
+    reference_weapons = {}
+    for slot in ["WeaponA1", "WeaponA2", "WeaponB1", "WeaponB2"]:
+        if slot in player_equipment.items:
+            player_weapons[player_equipment.items[slot].type] = player_equipment.items[slot]
+        if slot in reference_equipment.items:
+            reference_weapons[reference_equipment.items[slot].type] = reference_equipment.items[slot]
 
-    # compare both player equipments with the reference equipment
-    for fbg, player_eq in [(fbg_1, player_equipment), (fbg_2, player_equipment_tmp)]:
-        using_correct_weapons = True
-        for slot in ["WeaponA1", "WeaponA2", "WeaponB1", "WeaponB2"]:
-            if not compare_item(slot, player_eq, reference_equipment, fbg, Rarity("Ascended")):
-                continue
-
-            # If items exist we can also check their type and if upgrades match
-            reference_item: Item = reference_equipment.items[slot]
-            player_item: Item = player_eq.items[slot]
-
-            # Check item type
-            if player_item.type != reference_item.type:
-                fbg.add(Feedback(f"Your {player_item.type} has to be a {reference_item.type}",
-                                 FeedbackLevel.ERROR))
-                using_correct_weapons = False
-                continue
-
-            # Check if upgrades exist
-            if len(player_item.upgrades) < len(reference_item.upgrades):
-                # Legendary weapons sometimes show up without a sigil
-                if player_item.rarity == Rarity("Legendary"):
-                    fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
-                                     f"It should have a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
-                                     FeedbackLevel.WARNING))
-                    continue
-                else:
-                    fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
-                                     f"It needs a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
-                                     FeedbackLevel.ERROR))
-                    continue
-
-            # Compare upgrades. Order of upgrades doesn't matter
-            sc_upgrades = [upgrade.name for upgrade in reference_item.upgrades]
-            player_upgrades = [upgrade.name for upgrade in player_item.upgrades]
-            for sc_upgrade in reference_item.upgrades:
-                if sc_upgrade.name in player_upgrades:
-                    player_upgrades.remove(sc_upgrade.name)
-                    sc_upgrades.remove(sc_upgrade.name)
-
-            if len(sc_upgrades) != 0 or len(player_upgrades) != 0:
-                fbg.add(Feedback(f"Your {player_item.type} has a {' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
-                                 f" instead of a {' and '.join(f'{upgrade}' for upgrade in sc_upgrades)}",
-                                 FeedbackLevel.WARNING))
-
-        # Add positive feedback
-        if using_correct_weapons:
-            fbg.add(Feedback(f"You are using the correct weapons", FeedbackLevel.SUCCESS))
-        if fbg.level <= FeedbackLevel.WARNING:
-            fbg.add(Feedback(f"All items are at least ascended", FeedbackLevel.SUCCESS))
-        if fbg.level <= FeedbackLevel.SUCCESS:
-            fbg.add(Feedback(f"Stats and upgrades of all items are correct", FeedbackLevel.SUCCESS))
-
-    # Select the feedback with the least errors and return it
-    if fbg_1.level < fbg_2.level:
-        fbg = fbg_1
-    elif fbg_1.level > fbg_2.level:
-        fbg = fbg_2
-    else:
-        if len(fbg_1.feedback) <= len(fbg_2.feedback):
-            fbg = fbg_1
+    # Check if the player is using the correct weapon types
+    player_weapon_types = list(player_weapons.keys())
+    for weapon in reference_weapons.keys():
+        if weapon in player_weapons.keys():
+            player_weapon_types.remove(weapon)
         else:
-            fbg = fbg_2
+            fbg.add(Feedback(f"You are missing a {weapon}", FeedbackLevel.ERROR))
+
+    if player_weapon_types:
+        fbg.add(Feedback(f"You are not using the correct weapons. "
+                         f"You should be using {reference_equipment.get_weapons_str()}"
+                         f" instead of {player_equipment.get_weapons_str()}",
+                         FeedbackLevel.ERROR))
+
+    if fbg.level == FeedbackLevel.ERROR:
+        return fbg
+    fbg.add(Feedback(f"You are using the correct weapons", FeedbackLevel.SUCCESS))
+
+    for weapon in reference_weapons.keys():
+        player_item: Item = player_weapons[weapon]
+        reference_item: Item = reference_weapons[weapon]
+
+        # Compare item stats
+        if player_item.stats.name != reference_item.stats.name:
+            fbg.add(Feedback(f"Your {player_item.stats.name} {player_item.type} should be {reference_item.stats.name}",
+                             FeedbackLevel.WARNING))
+
+        # Check rarity
+        if player_item.rarity < Rarity("Ascended"):
+            fbg.add(Feedback(f"Your {player_item.type} has to be at least {Rarity('Ascended')}", FeedbackLevel.ERROR))
+
+        # Check level
+        if player_item.level < 80:
+            fbg.add(Feedback(f"Your {player_item.type} has to be a level 80 item", FeedbackLevel.ERROR))
+
+        # Check if upgrades exist
+        if len(player_item.upgrades) < len(reference_item.upgrades):
+            # Legendary weapons sometimes show up without a sigil
+            if player_item.rarity == Rarity("Legendary"):
+                fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
+                                 f"It should have a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
+                                 FeedbackLevel.WARNING))
+                continue
+            else:
+                fbg.add(Feedback(f"Your {player_item.type} is missing a sigil. "
+                                 f"It needs a {' and a '.join(f'{upgrade}' for upgrade in reference_item.upgrades)}",
+                                 FeedbackLevel.ERROR))
+                continue
+
+        # Compare upgrades. Order of upgrades doesn't matter
+        sc_upgrades = [upgrade.name for upgrade in reference_item.upgrades]
+        player_upgrades = [upgrade.name for upgrade in player_item.upgrades]
+        for sc_upgrade in reference_item.upgrades:
+            if sc_upgrade.name in player_upgrades:
+                player_upgrades.remove(sc_upgrade.name)
+                sc_upgrades.remove(sc_upgrade.name)
+
+        if len(sc_upgrades) != 0 or len(player_upgrades) != 0:
+            fbg.add(
+                Feedback(f"Your {player_item.type} has a {' and '.join(f'{upgrade}' for upgrade in player_upgrades)}"
+                         f" instead of a {' and '.join(f'{upgrade}' for upgrade in sc_upgrades)}",
+                         FeedbackLevel.WARNING))
+
+    if fbg.level <= FeedbackLevel.WARNING:
+        fbg.add(Feedback(f"All items are at least ascended", FeedbackLevel.SUCCESS))
+    if fbg.level <= FeedbackLevel.SUCCESS:
+        fbg.add(Feedback(f"Stats and upgrades of all items are correct", FeedbackLevel.SUCCESS))
     return fbg
 
 
