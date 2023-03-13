@@ -10,7 +10,6 @@ class Equipment(Base):
     __tablename__ = "equipment"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
 
     # Armor
     helm_id: Mapped[int] = mapped_column(ForeignKey("items.id"), nullable=True)
@@ -52,8 +51,8 @@ class Equipment(Base):
 
     def __str__(self):
         nl = "\n"
-        return f"Equipment Name: {self.name}\n" \
-               f"{nl.join(f'{item.slot.name}: {item}' for item in self.items)}"
+        return f"{nl.join(f'{item.slot.name}: {item}' for item in self.items)}"
+
 
     @property
     def items(self) -> List["Item"]:
@@ -62,6 +61,9 @@ class Equipment(Base):
             if getattr(self, slot.value):
                 lst.append(getattr(self, slot.value))
         return lst
+
+    def add_item(self, item: "Item"):
+        setattr(self, item.slot.value, item)
 
     def to_embed(self, embed: Embed = Embed(title="Equipment")):
         # Armor

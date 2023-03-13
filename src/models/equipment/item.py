@@ -19,6 +19,14 @@ class Item(Base):
     upgrade_1: Mapped[Optional[str]]
     upgrade_2: Mapped[Optional[str]]
 
+    def add_upgrade(self, upgrade: str):
+        if not self.upgrade_1:
+            self.upgrade_1 = upgrade
+        elif not self.upgrade_2:
+            self.upgrade_2 = upgrade
+        else:
+            raise Exception("Max amount of upgrades reached")
+
     def __str__(self):
         string = f"{self.rarity} {self.stats} {self.type}"
         if self.upgrade_1 and self.upgrade_2:
