@@ -23,3 +23,28 @@ class EquipmentSlot(Enum):
     WeaponA2 = "weapon_a2"
     WeaponB1 = "weapon_b1"
     WeaponB2 = "weapon_b2"
+
+    @staticmethod
+    def get_armor_slots():
+        return [EquipmentSlot.Helm,
+                EquipmentSlot.Shoulders,
+                EquipmentSlot.Coat,
+                EquipmentSlot.Gloves,
+                EquipmentSlot.Leggings,
+                EquipmentSlot.Boots]
+
+    @staticmethod
+    def get_trinket_slots():
+        return [EquipmentSlot.Backpack,
+                EquipmentSlot.Accessory1,
+                EquipmentSlot.Accessory2,
+                EquipmentSlot.Amulet,
+                EquipmentSlot.Ring1,
+                EquipmentSlot.Ring2]
+
+    @staticmethod
+    def get_weapon_slots():
+        return [EquipmentSlot.WeaponA1,
+                EquipmentSlot.WeaponA2,
+                EquipmentSlot.WeaponB1,
+                EquipmentSlot.WeaponB2]
