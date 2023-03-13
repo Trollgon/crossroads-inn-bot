@@ -3,7 +3,7 @@ from sqlalchemy import ForeignKey
 from discord import Embed
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
-from models.equipment.equipment_slot import EquipmentSlot
+from models.enums.equipment_slot import EquipmentSlot
 
 
 class Equipment(Base):

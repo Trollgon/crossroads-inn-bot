@@ -1,8 +1,8 @@
 from typing import Optional
 from models.base import Base
 from sqlalchemy.orm import Mapped, mapped_column
-from models.equipment.equipment_slot import EquipmentSlot
-from models.equipment.rarity import Rarity
+from models.enums.equipment_slot import EquipmentSlot
+from models.enums.rarity import Rarity
 
 
 class Item(Base):
