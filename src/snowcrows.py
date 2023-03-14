@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import aiohttp
 from models.build import Build
+from models.enums.profession import Profession
 from models.equipment import Equipment
 from models.enums.equipment_slot import EquipmentSlot
 from models.item import Item
@@ -23,6 +24,7 @@ async def get_sc_equipment(url: str, api: API = API("")) -> Build:
     table_data = sc_soup.find_all("td")
     build = Build()
     build.name = f"{sc_soup.find_all('h1', {'class': 'font-sans font-bold text-5xl m-0 p-0'})[0].text}"
+    build.profession = Profession[sc_soup.find_all('a', {'class': '-top-1 relative inline-block lg:inline bg-black bg-opacity-30 py-1.5 px-4 rounded'})[0].text.split(' ')[0]]
     build.url = url
     equipment = Equipment()
     mh, oh, ring, accessory = 1, 1, 1, 1
