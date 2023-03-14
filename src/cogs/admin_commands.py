@@ -6,7 +6,7 @@ import typing
 from database import Session
 from models.build import Build
 from models.enums.profession import Profession
-from snowcrows import get_sc_build
+from snowcrows import get_sc_build, get_sc_builds
 from cogs.views.application_overview import ApplicationOverview
 
 
@@ -124,4 +124,23 @@ class AdminCommands(commands.Cog):
                 await interaction.response.send_message("Build was removed", ephemeral=True)
             else:
                 await interaction.response.send_message("Build not found", ephemeral=True)
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @build.command(name="init")
+    async def build_init(self, interaction: Interaction):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        async with Session.begin() as session:
+            for profession in Profession:
+                urls = await get_sc_builds(profession)
+                for url in urls:
+                    build = await Build.find(session, url=url)
+                    if build:
+                        await session.delete(build)
+                        print("deleted", build)
+                    build = await get_sc_build(url)
+                    print("added build", url)
+                    session.add(build)
+        await interaction.followup.send("Added all recommended builds", ephemeral=True)
 

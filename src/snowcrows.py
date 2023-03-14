@@ -81,3 +81,14 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
         equipment.add_item(item)
     build.equipment = equipment
     return build
+
+
+async def get_sc_builds(profession: Profession):
+    resp = await sc_get(f"https://snowcrows.com/en/builds?profession={profession.value}&category=recommended")
+    sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
+
+    links = []
+    for link in sc_soup.find_all("a", href=True):
+        if link["href"].startswith("/en/builds/"):
+            links.append("https://snowcrows.com" + link["href"])
+    return links

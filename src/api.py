@@ -25,7 +25,7 @@ class API:
             urls_expire_after={
                 "https://api.guildwars2.com/v2/items": 60*60*24*7,      # Cache items for 1 week
                 "https://api.guildwars2.com/v2/itemstats": 60*60*24*7,  # Cache item stats for 1 week
-                "https://api.guildwars2.com/v2/characters?id=*": 60000,    # Cache characters for 1 min
+                "https://api.guildwars2.com/v2/characters?id=*": 60,    # Cache characters for 1 min
                 "https://api.guildwars2.com/": 0,                       # Don't cache anything else
             })
 
