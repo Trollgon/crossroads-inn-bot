@@ -18,7 +18,7 @@ async def sc_get(url):
             return await r.read()
 
 
-async def get_sc_equipment(url: str, api: API = API("")) -> Build:
+async def get_sc_build(url: str, api: API = API("")) -> Build:
     resp = await sc_get(url)
     sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
     table_data = sc_soup.find_all("td")

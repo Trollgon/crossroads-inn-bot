@@ -19,8 +19,23 @@ class Build(Base):
     def __str__(self):
         return f"{self.name}{' (' + self.url + ')' if self.url else ''}:\n{self.equipment}"
 
-    async def get(self, profession: Profession, session: AsyncSession):
+    def to_link(self):
+        return f"[{self.name}]{'(' + self.url + ')' if self.url else ''}"
+
+    @staticmethod
+    async def from_profession(session: AsyncSession, profession: Profession):
         stmt = select(Build).where(Build.profession == profession)
         result = await session.execute(stmt)
         instance = result.scalars().all()
+        return instance
+
+    @staticmethod
+    async def find(session: AsyncSession, *, id: int = None, url: str = None):
+        stmt = select(Build)
+        if id:
+            stmt = stmt.where(Build.id == id)
+        if url:
+            stmt = stmt.where(Build.url == url)
+        result = await session.execute(stmt)
+        instance = result.scalar()
         return instance

@@ -3,14 +3,11 @@ import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
-from gw2.snowcrows import add_build, remove_build, get_builds
+from database import Session
+from models.build import Build
+from models.enums.profession import Profession
+from snowcrows import get_sc_build
 from cogs.views.application_overview import ApplicationOverview
-
-professions = typing.Literal[
-    "Guardian", "Warrior", "Revenant",
-    "Engineer", "Ranger", "Thief",
-    "Elementalist", "Mesmer", "Necromancer"
-]
 
 
 class AdminCommands(commands.Cog):
@@ -71,15 +68,24 @@ class AdminCommands(commands.Cog):
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.command(name="builds")
-    async def builds(self, interaction: Interaction, profession: typing.Optional[professions]):
-        builds = get_builds(profession)
+    async def builds(self, interaction: Interaction, profession: typing.Optional[Profession]):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        professions = []
+        if profession:
+            professions = [profession]
+        else:
+            for profession in Profession:
+                professions.append(profession)
+
         embed = Embed(title="Builds")
-        for profession in builds:
-            value = ""
-            for build in builds[profession]:
-                value += f"[{build}](https://snowcrows.com{builds[profession][build]})\n"
-            embed.add_field(name=profession, value=value)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        async with Session() as session:
+            for profession in professions:
+                value = ""
+                for build in await Build.from_profession(session, profession):
+                    value += f"{build.to_link()}\n"
+                embed.add_field(name=profession.name, value=value)
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     build = app_commands.Group(name="build", description="Add and remove builds")
 
@@ -92,8 +98,15 @@ class AdminCommands(commands.Cog):
             await interaction.response.send_message("Invalid url", ephemeral=True)
             return
 
-        await add_build(url=snowcrows_url.replace("https://snowcrows.com", ""))
-        await interaction.response.send_message("Build was added", ephemeral=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
+        async with Session.begin() as session:
+            if await Build.find(session, url=snowcrows_url):
+                await interaction.followup.send("Build already exists", ephemeral=True)
+                return
+            build = await get_sc_build(snowcrows_url)
+            session.add(build)
+        await interaction.followup.send("Build was added", ephemeral=True)
 
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
@@ -104,8 +117,11 @@ class AdminCommands(commands.Cog):
             await interaction.response.send_message("Invalid url", ephemeral=True)
             return
 
-        if remove_build(url=snowcrows_url.replace("https://snowcrows.com", "")):
-            await interaction.response.send_message("Build was removed", ephemeral=True)
-        else:
-            await interaction.response.send_message("Build not found", ephemeral=True)
+        async with Session.begin() as session:
+            build = await Build.find(session, url=snowcrows_url)
+            if build:
+                await session.delete(build)
+                await interaction.response.send_message("Build was removed", ephemeral=True)
+            else:
+                await interaction.response.send_message("Build not found", ephemeral=True)
 

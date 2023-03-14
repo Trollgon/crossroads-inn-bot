@@ -2,8 +2,8 @@ import os
 import discord
 from discord.ext import commands
 from cogs.admin_commands import AdminCommands
-from gw2.snowcrows import init_builds
 from cogs.views.application_overview import ApplicationOverview
+from database import init_db
 
 intents = discord.Intents.default()
 intents.members = True
@@ -19,6 +19,6 @@ async def setup_hook():
 @bot.event
 async def on_ready():
     await bot.add_cog(AdminCommands(bot))
-    await init_builds()
+    await init_db()
 
 bot.run(os.getenv("DISCORD_TOKEN"))

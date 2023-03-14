@@ -1,8 +1,10 @@
 import os
 from discord import Interaction
-from gw2.snowcrows import get_sc_equipment, get_builds
-from gw2.compare import *
-from gw2.models.equipment import get_equipment
+from api import API
+from database import Session
+from models.build import Build
+from models.enums.profession import Profession
+from models.equipment import Equipment
 from models.feedback import *
 from discord.ext import commands
 from cogs.logging import log_gear_check
@@ -47,7 +49,7 @@ class ApplicationView(discord.ui.View):
         self.original_message = original_message
 
         self.equipment_tabs_select = SimpleDropdown(placeholder="Select your equipment template")
-        self.sc_build_select = SimpleDropdown(placeholder="Select your build")
+        self.build_select = SimpleDropdown(placeholder="Select your build")
 
     async def init(self):
         # Equipment template select
@@ -59,10 +61,11 @@ class ApplicationView(discord.ui.View):
         self.add_item(self.equipment_tabs_select)
 
         # Build select
-        builds = get_builds(character_data["profession"])[character_data["profession"]]
+        async with Session() as session:
+            builds = await Build.from_profession(session, Profession[character_data["profession"]])
         for build in builds:
-            self.sc_build_select.add_option(label=build, value=builds[build])
-        self.add_item(self.sc_build_select)
+            self.build_select.add_option(label=build.name, value=build.id)
+        self.add_item(self.build_select)
 
     @discord.ui.button(label="Submit", style=discord.ButtonStyle.green, row=2, disabled=True)
     async def submit(self, interaction: Interaction, button: discord.ui.Button):
@@ -73,12 +76,12 @@ class ApplicationView(discord.ui.View):
 
         # Defer to prevent timeouts
         await interaction.response.defer()
-
-        reference_equipment = await get_sc_equipment(self.api, self.sc_build_select.values[0])
-        player_equipment = await get_equipment(self.api, self.character, int(self.equipment_tabs_select.values[0]))
+        async with Session() as session:
+            build = await Build.find(session, id=int(self.build_select.values[0]))
+        player_equipment = await self.api.get_equipment(self.character, int(self.equipment_tabs_select.values[0]))
 
         embed = Embed(title="Gearcheck Feedback",
-                      description=f"**Comparing equipment tab {player_equipment.name} to {reference_equipment.name}**\n"
+                      description=f"**Comparing equipment tab {self.equipment_tabs_select.values[0]} to {build.to_link()}**\n"
                                   f"If your gear is not showing up correctly please equip the equipment template you selected\n\n"
                                   f"{FeedbackLevel.SUCCESS.emoji} **Success:** You have the correct gear\n"
                                   f"{FeedbackLevel.WARNING.emoji} **Warning:** Gear does not completely match the selected build\n"
@@ -86,10 +89,7 @@ class ApplicationView(discord.ui.View):
         # Add additional whitespace for better separation
         embed.add_field(name=" ", value="", inline=False)
 
-        fbc = FeedbackCollection()
-        fbc.add(compare_armor(player_equipment, reference_equipment))
-        fbc.add(compare_trinkets(player_equipment, reference_equipment))
-        fbc.add(compare_weapons(player_equipment, reference_equipment))
+        fbc = player_equipment.compare(build.equipment)
         fbc.to_embed(embed, False)
 
         match fbc.level:
@@ -105,7 +105,7 @@ class ApplicationView(discord.ui.View):
                                      f"but you can request a manual gear check. Use this if you are using a different "
                                      f"gear setup than Snowcrows.", value="")
                 view = SimpleButtonView("Request Manual Review", self.original_message, request_equipment_review,
-                                        player_equipment, self.bot, reference_equipment.name)
+                                        player_equipment, self.bot, build.name)
                 await self.original_message.edit(embed=embed, view=view)
 
             case FeedbackLevel.ERROR:
@@ -113,18 +113,18 @@ class ApplicationView(discord.ui.View):
                 embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please fix all of the errors in your gear and try again.", value="")
                 await self.original_message.edit(embed=embed, view=None)
 
-        await log_gear_check(self.bot, interaction, player_equipment, reference_equipment, fbc)
+        await log_gear_check(self.bot, interaction, player_equipment, build, fbc)
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
         # Enable submit button if both selects have a value selected
-        if self.equipment_tabs_select.values and self.sc_build_select.values:
+        if self.equipment_tabs_select.values and self.build_select.values:
             self.children[0].disabled = False
 
             # Make sure options stay visually selected when updating view
             for opt in self.equipment_tabs_select.options:
                 opt.default = opt.value in self.equipment_tabs_select.values
-            for opt in self.sc_build_select.options:
-                opt.default = opt.value in self.sc_build_select.values
+            for opt in self.build_select.options:
+                opt.default = str(opt.value) in self.build_select.values
             # Update view
             await self.original_message.edit(view=self)
         return True
