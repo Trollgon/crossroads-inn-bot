@@ -1,4 +1,4 @@
-from copy import copy
+from copy import deepcopy
 from typing import List
 from sqlalchemy import ForeignKey
 from discord import Embed
@@ -79,10 +79,10 @@ class Equipment(Base):
         return getattr(self, slot.value)
 
     def get_weapons_str(self) -> str:
-        return f"{self.get_item(EquipmentSlot.WeaponA1).type if self.get_item(EquipmentSlot.WeaponA1) else 'None'}/" \
-               f"{self.get_item(EquipmentSlot.WeaponA2).type if self.get_item(EquipmentSlot.WeaponA2) else 'None'} and " \
-               f"{self.get_item(EquipmentSlot.WeaponB1).type if self.get_item(EquipmentSlot.WeaponB1) else 'None'}/" \
-               f"{self.get_item(EquipmentSlot.WeaponB2).type if self.get_item(EquipmentSlot.WeaponB2) else 'None'}"
+        return f"{self.weapon_a1.stats + ' ' + self.weapon_a1.type if self.weapon_a1 else 'None'}/" \
+               f"{self.weapon_a2.stats + ' ' + self.weapon_a2.type if self.weapon_a2 else 'None'} and " \
+               f"{self.weapon_b1.stats + ' ' + self.weapon_b1.type if self.weapon_b1 else 'None'}/" \
+               f"{self.weapon_b2.stats + ' ' + self.weapon_b2.type if self.weapon_b2 else 'None'}"
 
     def to_embed(self, embed: Embed = Embed(title="Equipment")):
         # Armor
@@ -172,43 +172,50 @@ class Equipment(Base):
         return fbg
 
     def compare_weapons(self, other):
-        fbg = FeedbackGroup("Weapons")
+        fbgs = []
+        self_cp = deepcopy(self)
+        for _ in range(2):
+            for _ in range(2):
+                fbg = FeedbackGroup("Weapons")
+                for slot in EquipmentSlot.get_weapon_slots():
+                    if not other.get_item(slot):
+                        continue
+                    if not self_cp.get_item(slot):
+                        break
+                    fbg = self_cp.get_item(slot).check_basics(fbg, Rarity.Ascended)
+                    fbg = self_cp.get_item(slot).compare(other.get_item(slot), fbg)
+                else:
+                    # Add positive feedback
+                    if fbg.level <= FeedbackLevel.WARNING:
+                        fbg.add(Feedback(f"You are using the correct weapons", FeedbackLevel.SUCCESS))
+                        fbg.add(Feedback(f"All items are at least ascended", FeedbackLevel.SUCCESS))
+                    if fbg.level <= FeedbackLevel.SUCCESS:
+                        fbg.add(Feedback(f"Stats and upgrades of all items are correct", FeedbackLevel.SUCCESS))
+                    fbgs.append(fbg)
 
-        # Create dicts of weapons by weapon type
-        weapons_self = {}
-        weapons_other = {}
-        for slot in EquipmentSlot.get_weapon_slots():
-            item_self = self.get_item(slot)
-            item_other = other.get_item(slot)
-            if item_self:
-                weapons_self[item_self.type] = item_self
-            if item_other:
-                weapons_other[item_other.type] = item_other
+                # Switch offhands
+                self_cp.weapon_a2 = self.weapon_b2
+                self_cp.weapon_b2 = self.weapon_a2
 
-        # Check if the player is using the correct weapon types
-        weapons_self_lst = list(weapons_self.keys())
-        for weapon in weapons_other.keys():
-            if weapon in weapons_self.keys():
-                weapons_self_lst.remove(weapon)
-            else:
-                break
+            # Switch weapon sets
+            self_cp.weapon_a1 = self.weapon_b1
+            self_cp.weapon_a2 = self.weapon_b2
+            self_cp.weapon_b1 = self.weapon_a1
+            self_cp.weapon_b2 = self.weapon_a2
 
-        if weapons_self_lst:
+        if not fbgs:
+            fbg = FeedbackGroup("Weapons")
             fbg.add(Feedback(f"You are not using the correct weapons. "
                              f"You should be using {other.get_weapons_str()}"
-                             f" instead of {self.get_weapons_str()}",
+                             f" instead of {self_cp.get_weapons_str()}",
                              FeedbackLevel.ERROR))
             return fbg
 
-        for type in weapons_other.keys():
-            weapon_self = weapons_self[type]
-            weapon_other = weapons_other[type]
-
-            fbg = weapon_self.check_basics(fbg, Rarity.Ascended)
-            fbg = weapon_self.compare(weapon_other, fbg)
-
-        if fbg.level <= FeedbackLevel.WARNING:
-            fbg.add(Feedback(f"All items are at least ascended", FeedbackLevel.SUCCESS))
-        if fbg.level <= FeedbackLevel.SUCCESS:
-            fbg.add(Feedback(f"Stats and upgrades of all items are correct", FeedbackLevel.SUCCESS))
-        return fbg
+        # Select the feedback with the least errors and return it
+        selected = fbgs[0]
+        for fbg in fbgs:
+            if fbg.level < selected.level:
+                selected = fbg
+            elif fbg.level == selected.level and len(fbg.feedback) < len(selected.feedback):
+                selected = fbg
+        return selected

@@ -45,8 +45,9 @@ class Item(Base):
         return string
 
     def compare(self, other, fbg: FeedbackGroup = FeedbackGroup("Item comparison")) -> FeedbackGroup:
+        # Compare type
         if not self.type == other.type:
-            raise Exception("Can not compare different item types")
+            fbg.add(Feedback(f"You are using a {self.type} instead of a {other.type}", FeedbackLevel.ERROR))
 
         # Compare item stats
         if self.stats != other.stats:
