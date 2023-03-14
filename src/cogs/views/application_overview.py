@@ -1,8 +1,8 @@
 import os
 from discord import Interaction
 from cogs.utils import generate_error_embed
-from gw2.models.feedback import *
-from gw2.api import API
+from models.feedback import *
+from api import API
 from cogs.views.application import ApplicationView
 from discord.ext import commands
 

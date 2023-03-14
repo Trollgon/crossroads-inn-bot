@@ -3,7 +3,7 @@ import os
 import discord.ext.commands
 from discord import Embed
 from gw2.models.equipment import Equipment
-from gw2.models.feedback import FeedbackCollection
+from models.feedback import FeedbackCollection
 
 
 async def log_gear_check(bot: discord.ext.commands.Bot, interaction: discord.Interaction,

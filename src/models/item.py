@@ -3,6 +3,7 @@ from models.base import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from models.enums.equipment_slot import EquipmentSlot
 from models.enums.rarity import Rarity
+from models.feedback import FeedbackGroup, Feedback, FeedbackLevel
 
 
 class Item(Base):
@@ -34,3 +35,20 @@ class Item(Base):
         elif self.upgrade_1:
             string += f" ({self.upgrade_1})"
         return string
+
+    def compare(self, other, fbg: FeedbackGroup = FeedbackGroup("Item comparison"), min_rarity: Rarity = Rarity("Exotic")) -> FeedbackGroup:
+        if not self.type == other.type:
+            raise Exception("Can not compare different item types")
+
+        # Compare item stats
+        if self.stats != other.stats:
+            fbg.add(Feedback(f"Your {self.stats} {self.type} should be {other.stats.name}", FeedbackLevel.WARNING))
+
+        # Check rarity
+        if self.rarity < min_rarity:
+            fbg.add(Feedback(f"Your {self.type} has to be at least {min_rarity}", FeedbackLevel.ERROR))
+
+        # Check level
+        if self.level < 80:
+            fbg.add(Feedback(f"Your {self.type} has to be a level 80 item", FeedbackLevel.ERROR))
+        return fbg

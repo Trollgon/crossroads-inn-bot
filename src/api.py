@@ -1,7 +1,11 @@
 import json
 from exceptions import APIException
-from gw2.models.feedback import *
+from models.feedback import *
 from aiohttp_client_cache import CachedSession, SQLiteBackend
+from models.enums.equipment_slot import EquipmentSlot
+from models.enums.rarity import Rarity
+from models.equipment import Equipment
+from models.item import Item
 
 
 class API:
@@ -103,7 +107,7 @@ class API:
         bosses_killed = []
 
         # load json with achievement ids
-        with open("gw2/achievements.json", "r") as json_file:
+        with open("achievements.json", "r") as json_file:
             bosses = json.load(json_file)
 
             # get max amount of bosses (-2 to handle statues)
@@ -141,3 +145,58 @@ class API:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)",
                              FeedbackLevel.ERROR))
         return fbg
+
+    async def get_equipment(self, character: str, tab: int = 1):
+        char_data = await self.get_character_data(character)
+        equipment_tab_items = None
+        for equipment_tab in char_data["equipment_tabs"]:
+            if equipment_tab["tab"] == tab:
+                equipment_tab_items = equipment_tab
+
+        if not equipment_tab_items:
+            raise Exception("Equipment Tab not found")
+
+        equipment = Equipment()
+        for equipment_tab_item in equipment_tab_items["equipment"]:
+            # Skip items like underwater weapons and aqua breather
+            try:
+                EquipmentSlot[equipment_tab_item["slot"]]
+            except KeyError:
+                print("ignoring", equipment_tab_item["slot"])
+                continue
+
+            item = Item()
+            item.item_id = equipment_tab_item["id"]
+            item.slot = EquipmentSlot[equipment_tab_item["slot"]]
+            item_data = await self.get_item(equipment_tab_item['id'])
+            item.name = item_data["name"]
+            item.rarity = Rarity[item_data["rarity"]]
+            item.level = item_data["level"]
+
+            if "type" in item_data["details"]:
+                item.type = item_data["details"]["type"]
+            else:
+                item.type = equipment_tab_item["slot"]
+
+            if "stats" in equipment_tab_item:
+                stats_id = equipment_tab_item["stats"]["id"]
+            elif "infix_upgrade" in item_data["details"]:
+                stats_id = item_data["details"]["infix_upgrade"]["id"]
+            else:
+                for equipment_item in char_data["equipment"]:
+                    if item.item_id == equipment_item["id"] and equipment_tab_items["tab"] in equipment_item["tabs"] and "stats" in equipment_item:
+                        stats_id = equipment_item["stats"]["id"]
+                        break
+                else:
+                    # TODO: Handle items without stats correctly (e.g. aqua breather on Pamaki)
+                    print(f"Unable to determine stats for item: {item}")
+                    continue
+
+            stats_data = await self.get_item_stats(stats_id)
+            item.stats = stats_data["name"]
+
+            if "upgrades" in equipment_tab_item:
+                for upgrade_data in equipment_tab_item["upgrades"]:
+                    item.add_upgrade((await self.get_item(upgrade_data))["name"])
+            equipment.add_item(item)
+        return equipment

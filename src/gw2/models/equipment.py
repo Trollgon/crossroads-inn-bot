@@ -1,4 +1,4 @@
-from gw2.api import *
+from api import *
 
 ITEM_SLOT_WHITELIST = ["WeaponA1", "WeaponA2", "WeaponB1", "WeaponB2",
                        "Helm", "Shoulders", "Coat", "Gloves", "Leggings", "Boots",

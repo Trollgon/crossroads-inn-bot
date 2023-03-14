@@ -1,7 +1,7 @@
 import copy
 
 from gw2.models.equipment import *
-from gw2.models.feedback import *
+from models.feedback import *
 
 
 def compare_weapons(player_equipment: Equipment, reference_equipment: Equipment) -> FeedbackGroup:

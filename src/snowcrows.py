@@ -5,7 +5,7 @@ from models.equipment import Equipment
 from models.enums.equipment_slot import EquipmentSlot
 from models.item import Item
 from models.enums.rarity import Rarity
-from gw2.api import API
+from api import API
 
 
 async def sc_get(url):
