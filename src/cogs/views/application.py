@@ -105,7 +105,7 @@ class ApplicationView(discord.ui.View):
                                      f"but you can request a manual gear check. Use this if you are using a different "
                                      f"gear setup than Snowcrows.", value="")
                 view = SimpleButtonView("Request Manual Review", self.original_message, request_equipment_review,
-                                        player_equipment, self.bot, build.name)
+                                        player_equipment, self.bot, build.to_link())
                 await self.original_message.edit(embed=embed, view=view)
 
             case FeedbackLevel.ERROR:
