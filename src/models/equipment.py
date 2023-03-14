@@ -174,13 +174,18 @@ class Equipment(Base):
     def compare_weapons(self, other):
         fbgs = []
         self_cp = deepcopy(self)
-        for _ in range(2):
-            for _ in range(2):
+        for i in range(2):
+            for j in range(2):
                 fbg = FeedbackGroup("Weapons")
                 for slot in EquipmentSlot.get_weapon_slots():
                     if not other.get_item(slot):
+                        # If the item set has an item where there should be none we can break
+                        if self_cp.get_item(slot):
+                            break
                         continue
                     if not self_cp.get_item(slot):
+                        break
+                    if not self_cp.get_item(slot).type == other.get_item(slot).type:
                         break
                     fbg = self_cp.get_item(slot).check_basics(fbg, Rarity.Ascended)
                     fbg = self_cp.get_item(slot).compare(other.get_item(slot), fbg)
@@ -194,20 +199,23 @@ class Equipment(Base):
                     fbgs.append(fbg)
 
                 # Switch offhands
-                self_cp.weapon_a2 = self.weapon_b2
-                self_cp.weapon_b2 = self.weapon_a2
+                if j == 0:
+                    # self_cp = deepcopy(self)
+                    tmp = deepcopy(self_cp.weapon_a2)
+                    self_cp.weapon_a2 = deepcopy(self_cp.weapon_b2)
+                    self_cp.weapon_b2 = tmp
 
-            # Switch weapon sets
-            self_cp.weapon_a1 = self.weapon_b1
-            self_cp.weapon_a2 = self.weapon_b2
-            self_cp.weapon_b1 = self.weapon_a1
-            self_cp.weapon_b2 = self.weapon_a2
+            # Switch main hands
+            if i == 0:
+                self_cp = deepcopy(self)
+                self_cp.weapon_a1 = self.weapon_b1
+                self_cp.weapon_b1 = self.weapon_a1
 
         if not fbgs:
             fbg = FeedbackGroup("Weapons")
-            fbg.add(Feedback(f"You are not using the correct weapons. "
-                             f"You should be using {other.get_weapons_str()}"
-                             f" instead of {self_cp.get_weapons_str()}",
+            fbg.add(Feedback(f"**You are not using the correct weapons:**\n"
+                             f"**Your Weapons:** {self.get_weapons_str()}\n"
+                             f"**Correct Weapons:** {other.get_weapons_str()}\n",
                              FeedbackLevel.ERROR))
             return fbg
 

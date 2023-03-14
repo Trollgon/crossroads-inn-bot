@@ -45,10 +45,6 @@ class Item(Base):
         return string
 
     def compare(self, other, fbg: FeedbackGroup = FeedbackGroup("Item comparison")) -> FeedbackGroup:
-        # Compare type
-        if not self.type == other.type:
-            fbg.add(Feedback(f"You are using a {self.type} instead of a {other.type}", FeedbackLevel.ERROR))
-
         # Compare item stats
         if self.stats != other.stats:
             fbg.add(Feedback(f"Your {self.stats} {self.type} should be {other.stats}", FeedbackLevel.WARNING))
