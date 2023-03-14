@@ -188,12 +188,13 @@ class API:
                         stats_id = equipment_item["stats"]["id"]
                         break
                 else:
-                    # TODO: Handle items without stats correctly (e.g. aqua breather on Pamaki)
-                    print(f"Unable to determine stats for item: {item}")
-                    continue
+                    stats_id = None
 
-            stats_data = await self.get_item_stats(stats_id)
-            item.stats = stats_data["name"]
+            if stats_id:
+                stats_data = await self.get_item_stats(stats_id)
+                item.stats = stats_data["name"]
+            else:
+                item.stats = "none"
 
             if "upgrades" in equipment_tab_item:
                 for upgrade_data in equipment_tab_item["upgrades"]:
