@@ -1,4 +1,7 @@
 import json
+
+import aiohttp
+
 from exceptions import APIException
 from models.feedback import *
 from aiohttp_client_cache import CachedSession, SQLiteBackend
@@ -36,7 +39,10 @@ class API:
             if resp.status in (200, 401):
                 return await resp.json()
             else:
-                raise APIException(url, resp.status, await resp.json())
+                try:
+                    raise APIException(url, resp.status, await resp.json())
+                except Exception:
+                    raise APIException(url, resp.status, None)
 
     async def check_key(self) -> FeedbackGroup:
         fbg = FeedbackGroup("API Key")
