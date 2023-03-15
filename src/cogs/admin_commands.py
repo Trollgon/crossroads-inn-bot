@@ -138,9 +138,7 @@ class AdminCommands(commands.Cog):
                     build = await Build.find(session, url=url)
                     if build:
                         await session.delete(build)
-                        print("deleted", build)
                     build = await get_sc_build(url)
-                    print("added build", url)
                     session.add(build)
-        await interaction.followup.send("Added all recommended builds", ephemeral=True)
+        await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
 

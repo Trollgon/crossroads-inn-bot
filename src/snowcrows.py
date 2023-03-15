@@ -84,11 +84,12 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
 
 
 async def get_sc_builds(profession: Profession):
-    resp = await sc_get(f"https://snowcrows.com/en/builds?profession={profession.value}&category=recommended")
-    sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
-
+    # Find all recommended and viable builds that are not kite builds
     links = []
-    for link in sc_soup.find_all("a", href=True):
-        if link["href"].startswith("/en/builds/"):
-            links.append("https://snowcrows.com" + link["href"])
+    for category in ["recommended", "viable"]:
+        resp = await sc_get(f"https://snowcrows.com/en/builds?profession={profession.value}&category={category}")
+        sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
+        for link in sc_soup.find_all("a", href=True):
+            if link["href"].startswith("/en/builds/") and "kite" not in link["href"]:
+                links.append("https://snowcrows.com" + link["href"])
     return links
