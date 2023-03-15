@@ -2,7 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from cogs.admin_commands import AdminCommands
-from cogs.views.application_overview import ApplicationOverview
+from views.application_overview import ApplicationOverview
 from database import init_db
 
 intents = discord.Intents.default()

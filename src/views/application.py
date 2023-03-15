@@ -7,8 +7,8 @@ from models.enums.profession import Profession
 from models.equipment import Equipment
 from models.feedback import *
 from discord.ext import commands
-from cogs.logging import log_gear_check
-from cogs.utils import generate_error_embed
+from helpers.logging import log_gear_check
+from helpers.embeds import generate_error_embed
 
 
 class SimpleDropdown(discord.ui.Select):

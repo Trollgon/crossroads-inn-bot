@@ -1,7 +1,7 @@
 from enum import Enum
 import discord
 from discord import Embed
-from cogs.utils import split_embed
+from helpers.embeds import split_embed
 
 
 class FeedbackLevel(Enum):

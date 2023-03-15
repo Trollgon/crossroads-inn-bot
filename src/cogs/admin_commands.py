@@ -7,7 +7,7 @@ from database import Session
 from models.build import Build
 from models.enums.profession import Profession
 from snowcrows import get_sc_build, get_sc_builds
-from cogs.views.application_overview import ApplicationOverview
+from src.views.application_overview import ApplicationOverview
 
 
 class AdminCommands(commands.Cog):

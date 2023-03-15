@@ -1,9 +1,9 @@
 import os
 from discord import Interaction
-from cogs.utils import generate_error_embed
+from helpers.embeds import generate_error_embed
 from models.feedback import *
 from api import API
-from cogs.views.application import ApplicationView
+from views.application import ApplicationView
 from discord.ext import commands
 
 
