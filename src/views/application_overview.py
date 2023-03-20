@@ -33,7 +33,6 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
     def __init__(self, bot: commands.Bot):
         super().__init__()
         self.bot = bot
-        self.response = None
 
     async def on_submit(self, interaction: Interaction) -> None:
         # Defer to prevent interaction timeout
@@ -79,15 +78,12 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
             embed.colour = discord.Colour.green()
-            self.response = await interaction.followup.send(embed=embed, ephemeral=True)
-            view = ApplicationView(self.bot, api, str(self.character), self.response)
+            view = ApplicationView(self.bot, api, str(self.character))
             await view.init()
-            await self.response.edit(embed=embed, view=view)
+            respone = await interaction.followup.send(embed=embed, ephemeral=True, view=view)
+            view.original_message = respone
 
     async def on_error(self, interaction: Interaction, error: Exception) -> None:
-        if self.response:
-            await self.response.edit(content=None, view=None, embed=generate_error_embed(error))
-        else:
-            await interaction.followup.send(embed=generate_error_embed(error), ephemeral=True)
+        await interaction.followup.send(embed=generate_error_embed(error), ephemeral=True)
         # Log error
         await super().on_error(interaction, error)

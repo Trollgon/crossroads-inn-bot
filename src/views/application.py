@@ -41,12 +41,12 @@ class SimpleButtonView(discord.ui.View):
 
 
 class ApplicationView(discord.ui.View):
-    def __init__(self, bot: commands.Bot, api: API, character: str, original_message: discord.InteractionMessage):
+    def __init__(self, bot: commands.Bot, api: API, character: str):
         super().__init__()
         self.bot = bot
         self.api = api
         self.character = character
-        self.original_message = original_message
+        self.original_message = None
 
         self.equipment_tabs_select = SimpleDropdown(placeholder="Select your equipment template")
         self.build_select = SimpleDropdown(placeholder="Select your build")
