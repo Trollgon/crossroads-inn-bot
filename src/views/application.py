@@ -105,7 +105,7 @@ class ApplicationView(discord.ui.View):
                                      f"but you can request a manual gear check. Use this if you are using a different "
                                      f"gear setup than Snowcrows.", value="")
                 view = SimpleButtonView("Request Manual Review", self.original_message, request_equipment_review,
-                                        player_equipment, self.bot, build.to_link())
+                                        player_equipment, self.bot, build.to_link(), fbc)
                 await self.original_message.edit(embed=embed, view=view)
 
             case FeedbackLevel.ERROR:
@@ -135,8 +135,12 @@ class ApplicationView(discord.ui.View):
         await super().on_error(interaction, error, item)
 
 
-async def request_equipment_review(interaction: Interaction, equipment: Equipment, bot: commands.Bot, build: str):
+async def request_equipment_review(interaction: Interaction, equipment: Equipment, bot: commands.Bot, build: str, feedback: FeedbackCollection):
     embed = Embed(title="Equipment Review",
                   description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.\n\n"
                               f"**Build:** {build}")
-    await bot.get_channel(int(os.getenv("RR_CHANNEL_ID"))).send(embed=equipment.to_embed(embed))
+    embed = equipment.to_embed(embed)
+    for fb in feedback.feedback:
+        if fb.level > FeedbackLevel.SUCCESS:
+            embed = fb.to_embed(embed)
+    await bot.get_channel(int(os.getenv("RR_CHANNEL_ID"))).send(embed=embed)
