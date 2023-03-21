@@ -84,6 +84,15 @@ class Equipment(Base):
                f"{self.weapon_b1.stats + ' ' + self.weapon_b1.type if self.weapon_b1 else 'None'}/" \
                f"{self.weapon_b2.stats + ' ' + self.weapon_b2.type if self.weapon_b2 else 'None'}"
 
+    def get_weaponset(self, slot: EquipmentSlot):
+        match slot:
+            case EquipmentSlot.WeaponA1 | EquipmentSlot.WeaponA2:
+                return [self.get_item(EquipmentSlot.WeaponA1), self.get_item(EquipmentSlot.WeaponA2)]
+            case EquipmentSlot.WeaponB1 | EquipmentSlot.WeaponB2:
+                return [self.get_item(EquipmentSlot.WeaponB1), self.get_item(EquipmentSlot.WeaponB2)]
+            case _:
+                raise Exception(f"{slot} is not a weapon slot")
+
     def to_embed(self, embed: Embed = Embed(title="Equipment")):
         # Armor
         value = ""
@@ -179,9 +188,14 @@ class Equipment(Base):
                 fbg = FeedbackGroup("Weapons")
                 for slot in EquipmentSlot.get_weapon_slots():
                     if not other.get_item(slot):
-                        # If the item set has an item where there should be none we can break
+                        # Check if the item set has an item where there should be none
+                        # In case the other gear has no items in that weapons set we can ignore (and allow) the item
+                        # In case the weapon set is not empty then there should not be any additional items, so we break
                         if self_cp.get_item(slot):
-                            break
+                            weapon_set = other.get_weaponset(slot)
+                            print(weapon_set)
+                            if weapon_set[0] or weapon_set[1]:
+                                break
                         continue
                     if not self_cp.get_item(slot):
                         break
@@ -200,7 +214,6 @@ class Equipment(Base):
 
                 # Switch offhands
                 if j == 0:
-                    # self_cp = deepcopy(self)
                     tmp = deepcopy(self_cp.weapon_a2)
                     self_cp.weapon_a2 = deepcopy(self_cp.weapon_b2)
                     self_cp.weapon_b2 = tmp
