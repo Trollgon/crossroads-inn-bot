@@ -1,6 +1,11 @@
 import os
 from discord import Interaction
+from sqlalchemy import select
+
+from database import Session
 from helpers.embeds import generate_error_embed
+from models.application import Application
+from models.enums.application_status import ApplicationStatus
 from models.feedback import *
 from api import API
 from views.application import ApplicationView
@@ -14,9 +19,19 @@ class ApplicationOverview(discord.ui.View):
 
     @discord.ui.button(label='Apply Tier 1', style=discord.ButtonStyle.primary, custom_id='persistent_view:t1')
     async def apply_t1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check if user already has role
         for role in interaction.user.roles:
             if role.id in [int(os.getenv("T1_ROLE_ID")), int(os.getenv("T2_ROLE_ID")), int(os.getenv("T3_ROLE_ID"))]:
                 await interaction.response.send_message(ephemeral=True, content="You are already Tier 1 or above.")
+                return
+        # Check if user already has an open application
+        async with Session.begin() as session:
+            stmt = select(Application).where(Application.discord_user_id == interaction.user.id)\
+                .where(Application.status == ApplicationStatus.WAITING_FOR_REVIEW)
+            res = (await session.execute(stmt)).scalar()
+            if res:
+                await interaction.response.send_message(ephemeral=True, content="You already have an open application. "
+                                                                                "Please wait until it has been reviewed.")
                 return
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
