@@ -79,6 +79,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             # Update application
             application.status = self.status
             application.reviewer = interaction.user.id
+            await session.commit()
 
             # Cleanup
             await (await rr_channel.fetch_message(application.review_message_id)).delete()
@@ -87,7 +88,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             await interaction.followup.send(content=f"The application has been {application.status}", ephemeral=True)
 
             # Log
-            embed = Embed(title=f"Manual Gear Check: {application.status}")
+            embed = Embed(title=f"Manual Gear Check: {application.status}", colour=application.status.colour)
             embed.description = f"**ID:** {application.id}\n**User:** {member.mention}\n**Reviewer:** {interaction.user.mention}\n"
             embed.add_field(name="Feedback", value=self.feedback)
             await log_to_channel(self.bot, embed)

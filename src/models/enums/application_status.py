@@ -1,4 +1,5 @@
 from enum import Enum
+import discord
 from models.feedback import FeedbackLevel
 
 
@@ -30,3 +31,13 @@ class ApplicationStatus(Enum):
                 return "no review requested"
             case ApplicationStatus.WAITING_FOR_REVIEW:
                 return "waiting for review"
+
+    @property
+    def colour(self) -> discord.Colour:
+        match self:
+            case ApplicationStatus.ACCEPTED | ApplicationStatus.REVIEW_ACCEPTED:
+                return discord.Colour.green()
+            case ApplicationStatus.DENIED | ApplicationStatus.REVIEW_DENIED:
+                return discord.Colour.red()
+            case _:
+                return discord.Colour.yellow()
