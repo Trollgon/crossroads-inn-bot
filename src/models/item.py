@@ -51,13 +51,16 @@ class Item(Base):
 
         # Check if upgrades exist
         if len(self.upgrades) < len(other.upgrades):
-            s = f"Your {self.type} is missing a {'sigil' if self.type in EquipmentSlot.get_weapon_slots() else ' rune'}" \
-                f". It should have a {' and a '.join(f'{upgrade}' for upgrade in other.upgrades)}"
             # Legendary weapons sometimes show up without a sigil
-            if self.rarity == Rarity.Legendary and self.slot in EquipmentSlot.get_armor_slots():
-                fbg.add(Feedback(s, FeedbackLevel.WARNING))
+            if self.rarity == Rarity.Legendary and self.slot in EquipmentSlot.get_weapon_slots():
+                fbg.add(Feedback(f"Your {self.type} is missing a sigil. "
+                                 f"This error gets ignored because legendary weapons sometimes show up without sigils",
+                                 FeedbackLevel.SUCCESS))
             else:
-                fbg.add(Feedback(s, FeedbackLevel.ERROR))
+                fbg.add(Feedback(f"Your {self.type} is missing a "
+                                 f"{'sigil' if self.type in EquipmentSlot.get_weapon_slots() else ' rune'}. "
+                                 f"It should have a {' and a '.join(f'{upgrade}' for upgrade in other.upgrades)}",
+                                 FeedbackLevel.ERROR))
             return fbg
 
         # Compare upgrades. Order of upgrades doesn't matter
