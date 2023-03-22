@@ -1,13 +1,14 @@
 import os
 import random
 import discord
-from discord import Interaction, ButtonStyle
+from discord import Interaction, ButtonStyle, Embed
 from discord.ext import commands
 from discord.ui import View, Modal
 from database import Session
 from models.application import Application
 from models.enums.application_status import ApplicationStatus
 from views.callback_button import CallbackButton
+from helpers.logging import log_to_channel
 
 
 class ReviewView(View):
@@ -84,3 +85,9 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             application.review_message_id = None
             self.parent_view.stop()
             await interaction.followup.send(content=f"The application has been {application.status}", ephemeral=True)
+
+            # Log
+            embed = Embed(title=f"Manual Gear Check: {application.status}")
+            embed.description = f"**ID:** {application.id}\n**User:** {member.mention}\n**Reviewer:** {interaction.user.mention}\n"
+            embed.add_field(name="Feedback", value=self.feedback)
+            await log_to_channel(self.bot, embed)
