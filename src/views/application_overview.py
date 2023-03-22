@@ -94,8 +94,8 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
             embed.colour = discord.Colour.green()
             view = ApplicationView(self.bot, api, str(self.character))
             await view.init()
-            respone = await interaction.followup.send(embed=embed, ephemeral=True, view=view)
-            view.original_message = respone
+            response = await interaction.followup.send(embed=embed, ephemeral=True, view=view)
+            view.original_message = response
 
     async def on_error(self, interaction: Interaction, error: Exception) -> None:
         await interaction.followup.send(embed=generate_error_embed(error), ephemeral=True)

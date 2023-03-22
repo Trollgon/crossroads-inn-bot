@@ -1,4 +1,5 @@
 import os
+import random
 import discord
 from discord import Interaction, ButtonStyle
 from discord.ext import commands
@@ -31,6 +32,11 @@ class ReviewView(View):
         await super().on_error(interaction, error, item)
 
 
+emotes = ["<:feelsgoodman:312673949085335553>", "<:peeponice:729025840385359992>", "<:peeposmart:714504027332804679>",
+          "<:peepoyes:621652180419608586>", "<:pepeglad:761608459732123655>", "<:jbcheer:941330593927532594>",
+          "<:jbhappy:941330594397290526>", "<:jbheart:941330594258890842>", "<:jbhype:941330594279866388>"]
+
+
 class ReviewModal(Modal, title="Tier 1 Application"):
     feedback = discord.ui.TextInput(label="Feedback", style=discord.TextStyle.paragraph)
 
@@ -55,17 +61,19 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             # Make sure application has not been handled already
             if application.status != ApplicationStatus.WAITING_FOR_REVIEW:
                 reviewer = self.bot.get_user(application.reviewer)
-                await interaction.followup.send(content=f"This application has already been {application.status} by {reviewer}",
-                                                ephemeral=True)
+                await interaction.followup.send(content=f"This application has already been {application.status} by {reviewer}", ephemeral=True)
                 return
 
             # Add role and send feedback message
-            role = interaction.guild.get_role(int(os.getenv("T1_ROLE_ID")))
+            emote = ""
             ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
             rr_channel = interaction.guild.get_channel(int(os.getenv("RR_CHANNEL_ID")))
             member = interaction.guild.get_member(interaction.user.id)
-            await member.add_roles(role)
-            await ta_channel.send(content=f"{member.mention} {self.feedback}")
+            if self.status == ApplicationStatus.REVIEW_ACCEPTED:
+                role = interaction.guild.get_role(int(os.getenv("T1_ROLE_ID")))
+                emote = random.choice(emotes)
+                await member.add_roles(role)
+            await ta_channel.send(content=f"{member.mention} {self.feedback} {emote}")
 
             # Update application
             application.status = self.status
@@ -75,5 +83,4 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             await (await rr_channel.fetch_message(application.review_message_id)).delete()
             application.review_message_id = None
             self.parent_view.stop()
-            await interaction.followup.send(content=f"This application has been {application.status}",
-                                            ephemeral=True)
+            await interaction.followup.send(content=f"The application has been {application.status}", ephemeral=True)
