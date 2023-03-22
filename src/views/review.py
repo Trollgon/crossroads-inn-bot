@@ -73,6 +73,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
 
             # Cleanup
             await (await rr_channel.fetch_message(application.review_message_id)).delete()
+            application.review_message_id = None
             self.parent_view.stop()
             await interaction.followup.send(content=f"This application has been {application.status}",
                                             ephemeral=True)
