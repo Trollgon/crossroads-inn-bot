@@ -8,6 +8,7 @@ from models.build import Build
 from models.enums.profession import Profession
 from snowcrows import get_sc_build, get_sc_builds
 from views.application_overview import ApplicationOverview
+from views.review import ReviewView
 
 
 class AdminCommands(commands.Cog):
@@ -142,3 +143,6 @@ class AdminCommands(commands.Cog):
                     session.add(build)
         await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
 
+    @build.command(name="test")
+    async def test(self, interaction: Interaction):
+        await interaction.response.send_message(content="asd", view=ReviewView(self.bot))

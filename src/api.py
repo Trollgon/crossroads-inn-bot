@@ -168,7 +168,6 @@ class API:
             try:
                 EquipmentSlot[equipment_tab_item["slot"]]
             except KeyError:
-                print("ignoring", equipment_tab_item["slot"])
                 continue
 
             item = Item()

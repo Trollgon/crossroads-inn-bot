@@ -2,13 +2,15 @@ import os
 from discord import Interaction
 from api import API
 from database import Session
+from models.application import Application
 from models.build import Build
+from models.enums.application_status import ApplicationStatus
 from models.enums.profession import Profession
-from models.equipment import Equipment
 from models.feedback import *
 from discord.ext import commands
 from helpers.logging import log_gear_check
 from helpers.embeds import generate_error_embed
+from views.review import ReviewView
 
 
 class SimpleDropdown(discord.ui.Select):
@@ -92,6 +94,19 @@ class ApplicationView(discord.ui.View):
         fbc = player_equipment.compare(build.equipment)
         fbc.to_embed(embed, False)
 
+        application = Application()
+        application.equipment = player_equipment
+        application.build = build
+        application.discord_user_id = interaction.user.id
+        application.account_name = await self.api.get_account_name()
+        application.character_name = self.character
+        application.status = ApplicationStatus.from_feedback(fbc.level)
+        async with Session.begin() as session:
+            session.add(application)
+            await session.flush()
+            await session.refresh(application)
+            session.expunge_all()
+
         match fbc.level:
             case FeedbackLevel.SUCCESS:
                 embed.colour = discord.Colour.green()
@@ -105,7 +120,7 @@ class ApplicationView(discord.ui.View):
                                      f"but you can request a manual gear check. Use this if you are using a different "
                                      f"gear setup than Snowcrows.", value="")
                 view = SimpleButtonView("Request Manual Review", self.original_message, request_equipment_review,
-                                        player_equipment, self.bot, build.to_link(), fbc)
+                                        application, self.bot, fbc)
                 await self.original_message.edit(embed=embed, view=view)
 
             case FeedbackLevel.ERROR:
@@ -135,12 +150,17 @@ class ApplicationView(discord.ui.View):
         await super().on_error(interaction, error, item)
 
 
-async def request_equipment_review(interaction: Interaction, equipment: Equipment, bot: commands.Bot, build: str, feedback: FeedbackCollection):
-    embed = Embed(title="Equipment Review",
-                  description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.\n\n"
-                              f"**Build:** {build}")
-    embed = equipment.to_embed(embed)
-    for fb in feedback.feedback:
-        if fb.level > FeedbackLevel.SUCCESS:
-            embed = fb.to_embed(embed)
-    await bot.get_channel(int(os.getenv("RR_CHANNEL_ID"))).send(embed=embed)
+async def request_equipment_review(interaction: Interaction, application: Application, bot: commands.Bot, feedback: FeedbackCollection):
+    async with Session.begin() as session:
+        embed = Embed(title="Equipment Review",
+                      description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.\n\n"
+                                  f"**Build:** {application.build.to_link()}")
+        embed = application.equipment.to_embed(embed)
+        for fb in feedback.feedback:
+            if fb.level > FeedbackLevel.SUCCESS:
+                embed = fb.to_embed(embed)
+        message = await bot.get_channel(int(os.getenv("RR_CHANNEL_ID"))).send(embed=embed, view=ReviewView(bot, application.id))
+        application.review_message_id = message.id
+        application.status = ApplicationStatus.WAITING_FOR_REVIEW
+        session.add(application)
+

@@ -54,7 +54,6 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
             embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Character '{self.character}' found", value="",
                             inline=False)
         else:
-            print(await api.get_characters(), self.character, type(self.character))
             embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Character '{self.character}' doesn't exist", value="",
                             inline=False)
             failed_registration = True
