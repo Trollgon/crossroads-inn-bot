@@ -22,10 +22,11 @@ services:
     environment:
       - POSTGRES_USER=crossroads
       - POSTGRES_PASSWORD=crossroads
+      - POSTGRES_DB=crossroads
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 30s
       timeout: 30s
       retries: 5
