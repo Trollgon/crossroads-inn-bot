@@ -10,6 +10,7 @@ class Build(Base):
     __tablename__ = "builds"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    archived: Mapped[bool] = mapped_column(default=False)
     name: Mapped[str]
     url: Mapped[Optional[str]]
     profession: Mapped[Profession]
@@ -23,15 +24,15 @@ class Build(Base):
         return f"[{self.name}]{'(' + self.url + ')' if self.url else ''}"
 
     @staticmethod
-    async def from_profession(session: AsyncSession, profession: Profession):
-        stmt = select(Build).where(Build.profession == profession)
+    async def from_profession(session: AsyncSession, profession: Profession, *, archived: bool = False):
+        stmt = select(Build).where(Build.profession == profession).where(Build.archived == archived)
         result = await session.execute(stmt)
         instance = result.scalars().all()
         return instance
 
     @staticmethod
-    async def find(session: AsyncSession, *, id: int = None, url: str = None):
-        stmt = select(Build)
+    async def find(session: AsyncSession, *, id: int = None, url: str = None, archived: bool = False):
+        stmt = select(Build).where(Build.archived == archived)
         if id:
             stmt = stmt.where(Build.id == id)
         if url:
@@ -39,3 +40,6 @@ class Build(Base):
         result = await session.execute(stmt)
         instance = result.scalar()
         return instance
+
+    async def archive(self):
+        self.archived = True

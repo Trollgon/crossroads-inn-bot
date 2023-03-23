@@ -6,6 +6,7 @@ import typing
 from database import Session
 from models.build import Build
 from models.enums.profession import Profession
+from models.feedback import FeedbackLevel
 from snowcrows import get_sc_build, get_sc_builds
 from views.application_overview import ApplicationOverview
 from views.review import ReviewView
@@ -68,7 +69,7 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @app_commands.command(name="builds")
+    @app_commands.command(name="builds", description="Get a list of all allowed builds")
     async def builds(self, interaction: Interaction, profession: typing.Optional[Profession]):
         await interaction.response.defer(thinking=True, ephemeral=True)
         professions = []
@@ -93,7 +94,7 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @build.command(name="add")
+    @build.command(name="add", description="Add a build to the database")
     async def build_add(self, interaction: Interaction, snowcrows_url: str):
         if not snowcrows_url.startswith("https://snowcrows.com"):
             await interaction.response.send_message("Invalid url", ephemeral=True)
@@ -112,8 +113,8 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @build.command(name="remove")
-    async def build_remove(self, interaction: Interaction, snowcrows_url: str):
+    @build.command(name="archive", description="Removes the build from the list of allowed builds")
+    async def build_archive(self, interaction: Interaction, snowcrows_url: str):
         if not snowcrows_url.startswith("https://snowcrows.com"):
             await interaction.response.send_message("Invalid url", ephemeral=True)
             return
@@ -121,7 +122,7 @@ class AdminCommands(commands.Cog):
         async with Session.begin() as session:
             build = await Build.find(session, url=snowcrows_url)
             if build:
-                await session.delete(build)
+                build.archive()
                 await interaction.response.send_message("Build was removed", ephemeral=True)
             else:
                 await interaction.response.send_message("Build not found", ephemeral=True)
@@ -129,7 +130,7 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(administrator=True)
     @app_commands.checks.has_permissions(administrator=True)
-    @build.command(name="init")
+    @build.command(name="init", description="Populates the database with all recommended and viable builds")
     async def build_init(self, interaction: Interaction):
         await interaction.response.defer(thinking=True, ephemeral=True)
         async with Session.begin() as session:
@@ -137,12 +138,14 @@ class AdminCommands(commands.Cog):
                 urls = await get_sc_builds(profession)
                 for url in urls:
                     build = await Build.find(session, url=url)
+                    build_sc = await get_sc_build(url)
+                    # If the build already exists in the DB: check if the gear is the same. if not archive old build
                     if build:
-                        await session.delete(build)
-                    build = await get_sc_build(url)
-                    session.add(build)
+                        fbc = build.equipment.compare(build_sc.equipment)
+                        if fbc.level <= FeedbackLevel.SUCCESS:
+                            # Don't need to add it again if the gear is the same
+                            continue
+                        else:
+                            build.archive()
+                    session.add(build_sc)
         await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
-
-    @build.command(name="test")
-    async def test(self, interaction: Interaction):
-        await interaction.response.send_message(content="asd", view=ReviewView(self.bot))
