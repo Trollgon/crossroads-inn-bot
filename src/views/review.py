@@ -69,7 +69,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             emote = ""
             ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
             rr_channel = interaction.guild.get_channel(int(os.getenv("RR_CHANNEL_ID")))
-            member = interaction.guild.get_member(interaction.user.id)
+            member = interaction.guild.get_member(application.discord_user_id)
             if self.status == ApplicationStatus.REVIEW_ACCEPTED:
                 role = interaction.guild.get_role(int(os.getenv("T1_ROLE_ID")))
                 emote = random.choice(emotes)
