@@ -31,7 +31,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
     for i in range(0, len(table_data), 2):
         div = table_data[i].div
         item = Item()
-        item.item_id = div["data-armory-ids"]
+        item.item_id = int(div["data-armory-ids"])
         item_data = await api.get_item(item.item_id)
         item.name = item_data["name"]
         item.rarity = Rarity[item_data["rarity"]]

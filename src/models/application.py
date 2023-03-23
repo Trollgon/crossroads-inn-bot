@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import ForeignKey, DateTime, func
+from sqlalchemy import ForeignKey, DateTime, func, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
 from models.enums.application_status import ApplicationStatus
@@ -9,10 +9,10 @@ class Application(Base):
     __tablename__ = "applications"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    discord_user_id: Mapped[int]
+    discord_user_id: Mapped[int] = mapped_column(BigInteger)
     status: Mapped[ApplicationStatus]
-    review_message_id: Mapped[int] = mapped_column(nullable=True)
-    reviewer: Mapped[int] = mapped_column(nullable=True)
+    review_message_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    reviewer: Mapped[int] = mapped_column(BigInteger, nullable=True)
     time_created: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
     account_name: Mapped[str]
     character_name: Mapped[str]

@@ -62,7 +62,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             # Make sure application has not been handled already
             if application.status != ApplicationStatus.WAITING_FOR_REVIEW:
                 reviewer = self.bot.get_user(application.reviewer)
-                await interaction.followup.send(content=f"This application has already been {application.status} by {reviewer}", ephemeral=True)
+                await interaction.followup.send(content=f"This application has already been {application.status} by {reviewer.mention}", ephemeral=True)
                 return
 
             # Add role and send feedback message
@@ -79,16 +79,15 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             # Update application
             application.status = self.status
             application.reviewer = interaction.user.id
-            await session.commit()
 
             # Cleanup
             await (await rr_channel.fetch_message(application.review_message_id)).delete()
             application.review_message_id = None
-            self.parent_view.stop()
-            await interaction.followup.send(content=f"The application has been {application.status}", ephemeral=True)
+        self.parent_view.stop()
+        await interaction.followup.send(content=f"The application has been {self.status}", ephemeral=True)
 
-            # Log
-            embed = Embed(title=f"Manual Gear Check: {application.status}", colour=application.status.colour)
-            embed.description = f"**ID:** {application.id}\n**User:** {member.mention}\n**Reviewer:** {interaction.user.mention}\n"
-            embed.add_field(name="Feedback", value=self.feedback)
-            await log_to_channel(self.bot, embed)
+        # Log
+        embed = Embed(title=f"Manual Gear Check: {self.status}", colour=self.status.colour)
+        embed.description = f"**ID:** {self.application_id}\n**User:** {member.mention}\n**Reviewer:** {interaction.user.mention}\n"
+        embed.add_field(name="Feedback", value=self.feedback)
+        await log_to_channel(self.bot, embed)

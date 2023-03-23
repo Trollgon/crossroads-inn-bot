@@ -3,6 +3,9 @@ version: "3.9"
 services:
   bot:
     build: .
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       - DISCORD_TOKEN=
       - LOG_CHANNEL_ID=
@@ -11,4 +14,22 @@ services:
       - T1_ROLE_ID=
       - T2_ROLE_ID=
       - T3_ROLE_ID=
+      - DATABASE_URL=postgresql+asyncpg://crossroads:crossroads@db/crossroads
     restart: always
+
+  db:
+    image: postgres:15.2
+    environment:
+      - POSTGRES_USER=crossroads
+      - POSTGRES_PASSWORD=crossroads
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    restart: always
+
+volumes:
+  db-data:
