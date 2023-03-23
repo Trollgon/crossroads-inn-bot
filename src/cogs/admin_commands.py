@@ -82,7 +82,7 @@ class AdminCommands(commands.Cog):
             for profession in Profession:
                 professions.append(profession)
 
-        embed = CustomEmbed(title="Builds")
+        embed = CustomEmbed(self.bot, title="Builds")
         async with Session() as session:
             for profession in professions:
                 value = ""
@@ -160,7 +160,7 @@ class AdminCommands(commands.Cog):
     async def stats(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True)
 
-        embed = CustomEmbed(title="Application Stats")
+        embed = CustomEmbed(self.bot, title="Application Stats")
         async with Session.begin() as session:
             # Total applications
             stmt = select(func.count(Application.id))
