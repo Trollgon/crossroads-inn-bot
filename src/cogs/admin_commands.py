@@ -3,13 +3,15 @@ import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
+from sqlalchemy import select, func, desc
 from database import Session
+from models.application import Application
 from models.build import Build
+from models.enums.application_status import ApplicationStatus
 from models.enums.profession import Profession
 from models.feedback import FeedbackLevel
 from snowcrows import get_sc_build, get_sc_builds
 from views.application_overview import ApplicationOverview
-from views.review import ReviewView
 
 
 class AdminCommands(commands.Cog):
@@ -149,3 +151,47 @@ class AdminCommands(commands.Cog):
                             build.archive()
                     session.add(build_sc)
         await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.command(name="stats", description="Show some stats about the applications")
+    async def stats(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
+
+        embed = Embed(title="Application Stats")
+        async with Session.begin() as session:
+            # Total applications
+            stmt = select(func.count(Application.id))
+            res = await session.execute(stmt)
+            embed.description = f"**Total applications:** {res.scalar()}"
+
+            # Applications per status
+            stmt = select(Application.status, func.count(Application.status)).group_by(Application.status)
+            res = await session.execute(stmt)
+            v = ""
+            for r in res.all():
+                v += f"{r.status.name}: {r.count}\n"
+            embed.add_field(name="Applications per status:", value=v, inline=False)
+
+            # Users with the most reviews
+            stmt = select(Application.reviewer, func.count(Application.reviewer).label("count"))\
+                .where(Application.status.in_((ApplicationStatus.REVIEW_ACCEPTED, ApplicationStatus.REVIEW_DENIED)))\
+                .group_by(Application.reviewer).order_by(desc("count")).limit(5)
+            res = await session.execute(stmt)
+            v = ""
+            for r in res.all():
+                user = self.bot.get_user(r.reviewer)
+                v += f"{user.mention if user else 'Unknown'}: {r.count}\n"
+            embed.add_field(name="Most reviews:", value=v, inline=False)
+
+            # Most popular accepted builds
+            stmt = select(Build.name, func.count(Application.id).label("count")).join(Application)\
+                .where(Application.status.in_((ApplicationStatus.REVIEW_ACCEPTED, ApplicationStatus.ACCEPTED)))\
+                .group_by(Build.name).order_by(desc("count")).limit(10)
+            res = await session.execute(stmt)
+            v = ""
+            for r in res.all():
+                v += f"{r.name}: {r.count}\n"
+            embed.add_field(name="Most popular accepted builds:", value=v, inline=False)
+        await interaction.followup.send(embed=embed)
