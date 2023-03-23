@@ -5,6 +5,7 @@ from discord.ext import commands
 import typing
 from sqlalchemy import select, func, desc
 from database import Session
+from helpers.custom_embed import CustomEmbed
 from models.application import Application
 from models.build import Build
 from models.enums.application_status import ApplicationStatus
@@ -81,7 +82,7 @@ class AdminCommands(commands.Cog):
             for profession in Profession:
                 professions.append(profession)
 
-        embed = Embed(title="Builds")
+        embed = CustomEmbed(title="Builds")
         async with Session() as session:
             for profession in professions:
                 value = ""
@@ -159,7 +160,7 @@ class AdminCommands(commands.Cog):
     async def stats(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True)
 
-        embed = Embed(title="Application Stats")
+        embed = CustomEmbed(title="Application Stats")
         async with Session.begin() as session:
             # Total applications
             stmt = select(func.count(Application.id))
