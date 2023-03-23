@@ -9,5 +9,5 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
-engine = create_async_engine(os.getenv("DATABASE_URL"), echo=True)
+engine = create_async_engine(os.getenv("DATABASE_URL"), echo=False)
 Session = async_sessionmaker(engine)
