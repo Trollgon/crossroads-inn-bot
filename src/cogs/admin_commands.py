@@ -45,7 +45,7 @@ class AdminCommands(commands.Cog):
                               "3. The bot will check your Mastery and how many bosses you have killed\n"
                               "4. Select your equipment template and the build you want to apply for\n"
                               "5. The bot will compare your equipment to the build you selected\n"
-                              "6. If your gear is correct to bot will automatically grant you the role\n",
+                              "6. If your gear is correct the bot will automatically grant you the role\n",
                         inline=False)
         embed.add_field(name=" ", value="", inline=False)
         embed.add_field(name="How to get your API key",
