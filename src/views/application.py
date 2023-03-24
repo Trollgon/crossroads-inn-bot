@@ -2,6 +2,7 @@ import os
 from discord import Interaction
 from api import API
 from database import Session
+from helpers.emotes import get_random_success_emote
 from models.application import Application
 from models.build import Build
 from models.enums.application_status import ApplicationStatus
@@ -115,6 +116,8 @@ class ApplicationView(discord.ui.View):
                 await member.remove_roles(interaction.guild.get_role(int(os.getenv("T0_ROLE_ID"))))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await self.original_message.edit(embed=embed, view=None)
+                ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
+                await ta_channel.send(content=f"{member.mention} Congrats on tier1 {get_random_success_emote()}")
 
             case FeedbackLevel.WARNING:
                 embed.colour = discord.Colour.yellow()

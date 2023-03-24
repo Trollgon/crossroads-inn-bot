@@ -1,10 +1,10 @@
 import os
-import random
 import discord
 from discord import Interaction, ButtonStyle, Embed
 from discord.ext import commands
 from discord.ui import View, Modal
 from database import Session
+from helpers.emotes import get_random_success_emote
 from models.application import Application
 from models.enums.application_status import ApplicationStatus
 from views.callback_button import CallbackButton
@@ -31,11 +31,6 @@ class ReviewView(View):
         # Send message to user and log error
         await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
         await super().on_error(interaction, error, item)
-
-
-emotes = ["<:feelsgoodman:312673949085335553>", "<:peeponice:729025840385359992>", "<:peeposmart:714504027332804679>",
-          "<:peepoyes:621652180419608586>", "<:pepeglad:761608459732123655>", "<:jbcheer:941330593927532594>",
-          "<:jbhappy:941330594397290526>", "<:jbheart:941330594258890842>", "<:jbhype:941330594279866388>"]
 
 
 class ReviewModal(Modal, title="Tier 1 Application"):
@@ -73,7 +68,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             if self.status == ApplicationStatus.REVIEW_ACCEPTED:
                 role = interaction.guild.get_role(int(os.getenv("T1_ROLE_ID")))
                 old_role = interaction.guild.get_role(int(os.getenv("T0_ROLE_ID")))
-                emote = random.choice(emotes)
+                emote = get_random_success_emote()
                 await member.add_roles(role)
                 await member.remove_roles(old_role)
             await ta_channel.send(content=f"{member.mention} {self.feedback} {emote}")
