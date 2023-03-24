@@ -88,6 +88,6 @@ class ReviewModal(Modal, title="Tier 1 Application"):
 
         # Log
         embed = Embed(title=f"Manual Gear Check: {self.status}", colour=self.status.colour)
-        embed.description = f"**ID:** {self.application_id}\n**User:** {member.mention}\n**Reviewer:** {interaction.user.mention}\n"
+        embed.description = f"**ID:** {self.application_id}\n**User:** {member}\n**Reviewer:** {interaction.user.mention}\n"
         embed.add_field(name="Feedback", value=self.feedback)
         await log_to_channel(self.bot, embed)

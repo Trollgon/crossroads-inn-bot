@@ -153,7 +153,7 @@ class ApplicationView(discord.ui.View):
 async def request_equipment_review(interaction: Interaction, application: Application, bot: commands.Bot, feedback: FeedbackCollection):
     async with Session.begin() as session:
         embed = Embed(title="Equipment Review",
-                      description=f"{interaction.user.mention} failed the automatic gear check and requested a manual review.\n\n"
+                      description=f"{interaction.user} failed the automatic gear check and requested a manual review.\n\n"
                                   f"**Build:** {application.build.to_link()}")
         embed = application.equipment.to_embed(embed)
         for fb in feedback.feedback:

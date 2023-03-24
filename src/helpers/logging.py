@@ -13,7 +13,7 @@ async def log_gear_check(bot: discord.ext.commands.Bot, interaction: discord.Int
                          feedback: FeedbackCollection) -> None:
     # Log to channel
     embed = Embed(title=f"Automatic Gear Check: {feedback.level.name}",
-                  description=f"**User:** {interaction.user.mention}\n"
+                  description=f"**User:** {interaction.user}\n"
                               f"**Build:** {build.to_link()}")
     embed.colour = feedback.level.colour
     embed = equipment.to_embed(embed)
