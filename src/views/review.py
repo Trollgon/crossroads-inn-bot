@@ -72,8 +72,10 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             member = interaction.guild.get_member(application.discord_user_id)
             if self.status == ApplicationStatus.REVIEW_ACCEPTED:
                 role = interaction.guild.get_role(int(os.getenv("T1_ROLE_ID")))
+                old_role = interaction.guild.get_role(int(os.getenv("T0_ROLE_ID")))
                 emote = random.choice(emotes)
                 await member.add_roles(role)
+                await member.remove_roles(old_role)
             await ta_channel.send(content=f"{member.mention} {self.feedback} {emote}")
 
             # Update application

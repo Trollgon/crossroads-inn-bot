@@ -110,7 +110,9 @@ class ApplicationView(discord.ui.View):
         match fbc.level:
             case FeedbackLevel.SUCCESS:
                 embed.colour = discord.Colour.green()
-                await interaction.guild.get_member(interaction.user.id).add_roles(interaction.guild.get_role(int(os.getenv("T1_ROLE_ID"))))
+                member = interaction.guild.get_member(interaction.user.id)
+                await member.add_roles(interaction.guild.get_role(int(os.getenv("T1_ROLE_ID"))))
+                await member.remove_roles(interaction.guild.get_role(int(os.getenv("T0_ROLE_ID"))))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await self.original_message.edit(embed=embed, view=None)
 
