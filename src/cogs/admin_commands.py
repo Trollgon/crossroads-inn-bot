@@ -30,8 +30,9 @@ class AdminCommands(commands.Cog):
                 view.stop()
 
         embed = Embed(title="Tier Application Bot",
-                      description="You can use this bot to apply for Tiers on this server. "
-                                  f"Currently only supports {interaction.guild.get_role(int(os.getenv('T1_ROLE_ID'))).name}.",
+                      description="You can use this bot to apply for tiers on this server. You can find the requirements for our tiers "
+                                  f"[here](https://discord.com/channels/226398442082140160/1028218316751380541/1029082959430553650).\n\n"
+                                  f"This bot currently only supports Tier 1.",
                       colour=discord.Colour.from_rgb(99, 51, 4)
                       )
         embed.set_author(name=self.bot.user.display_name,
@@ -52,7 +53,7 @@ class AdminCommands(commands.Cog):
                         value="1. Open the [API Key Management](https://account.arena.net/applications) and log into your ArenaNet account.\n"
                               "2. Press `New Key`\n"
                               "3. Enter a name for the key\n"
-                              "4. Select the `account`, `characters` and `progression` permission\n"
+                              "4. Select the `account`, `characters`, `builds` and `progression` permission\n"
                               "5. Press `Create API Key`\n",
                         inline=False)
         await interaction.channel.send(view=ApplicationOverview(self.bot), embed=embed)

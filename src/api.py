@@ -62,6 +62,8 @@ class API:
             fbg.add(Feedback("API Key is missing 'progression' permission", FeedbackLevel.ERROR))
         if "characters" not in perms:
             fbg.add(Feedback("API Key is missing 'characters' permission", FeedbackLevel.ERROR))
+        if "builds" not in perms:
+            fbg.add(Feedback("API Key is missing 'builds' permission", FeedbackLevel.ERROR))
 
         if fbg.level == FeedbackLevel.SUCCESS:
             fbg.add(Feedback("API Key permissions are set up correctly", FeedbackLevel.SUCCESS))
