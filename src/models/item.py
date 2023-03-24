@@ -58,7 +58,7 @@ class Item(Base):
                                  FeedbackLevel.SUCCESS))
             else:
                 fbg.add(Feedback(f"Your {self.type} is missing a "
-                                 f"{'sigil' if self.type in EquipmentSlot.get_weapon_slots() else ' rune'}. "
+                                 f"{'sigil' if self.slot in EquipmentSlot.get_weapon_slots() else ' rune'}. "
                                  f"It should have a {' and a '.join(f'{upgrade}' for upgrade in other.upgrades)}",
                                  FeedbackLevel.ERROR))
             return fbg
