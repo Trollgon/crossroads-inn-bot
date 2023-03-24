@@ -11,6 +11,7 @@ services:
       - LOG_CHANNEL_ID=
       - RR_CHANNEL_ID=
       - TIER_ASSIGNMENT_CHANNEL_ID=
+      - T0_ROLE_ID=
       - T1_ROLE_ID=
       - T2_ROLE_ID=
       - T3_ROLE_ID=
