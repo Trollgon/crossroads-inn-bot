@@ -7,6 +7,7 @@ from models.enums.equipment_slot import EquipmentSlot
 from models.item import Item
 from models.enums.rarity import Rarity
 from api import API
+from models.stats import EquipmentStats
 
 
 async def sc_get(url):
@@ -27,6 +28,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
     build.profession = Profession[sc_soup.find_all('a', {'class': '-top-1 relative inline-block lg:inline bg-black bg-opacity-30 py-1.5 px-4 rounded'})[0].text.split(' ')[0]]
     build.url = url
     equipment = Equipment()
+    stats = EquipmentStats()
     mh, oh, ring, accessory = 1, 1, 1, 1
     for i in range(0, len(table_data), 2):
         div = table_data[i].div
@@ -40,15 +42,32 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
         if item_data["type"] == "UpgradeComponent":
             break
 
-        if f"data-armory-{item.item_id}-stat" in str(div):
-            stats_id = div[f"data-armory-{item.item_id}-stat"]
-        elif "infix_upgrade" in item_data["details"]:
+        if "infix_upgrade" in item_data["details"]:
             stats_id = item_data["details"]["infix_upgrade"]["id"]
+        elif f"data-armory-{item.item_id}-stat" in str(div):
+            stats_id = div[f"data-armory-{item.item_id}-stat"]
         else:
             print(str(div))
             raise Exception(f"Unable to determine stats for {item.name} on {url}")
         stats_data = await api.get_item_stats(stats_id)
         item.stats = stats_data["name"]
+
+        # Add stat attributes
+        if "infix_upgrade" in item_data["details"]:
+            stats.add_attributes(infix_upgrade=item_data["details"]["infix_upgrade"])
+        else:
+            attribute_adjustment = item_data["details"]["attribute_adjustment"]
+            if stats_id in item_data["details"]["stat_choices"]:
+                attributes = stats_data["attributes"]
+            else:
+                for id in item_data["details"]["stat_choices"]:
+                    stats_data = await api.get_item_stats(id)
+                    if stats_data["name"] == item.stats:
+                        attributes = stats_data["attributes"]
+                        break
+                else:
+                    raise Exception(f"Invalid stats id: {url} at {item.name} (id: {item.item_id}, stat_id: {stats_id})")
+            stats.calculate_attributes(attributes, attribute_adjustment)
 
         upgrade_ids = []
         if f"data-armory-{item.item_id}-upgrades" in str(div):
@@ -57,7 +76,6 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
             item.add_upgrade((await api.get_item(int(upgrade_id)))["name"])
 
         slot = table_data[i + 1].p.span.string
-
         if slot == "Main Hand":
             slot = f"Weapon{'A' if mh == 1 else 'B'}1"
             mh += 1
@@ -79,6 +97,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
             item.type = slot
         item.slot = EquipmentSlot[slot]
         equipment.add_item(item)
+    equipment.stats = stats
     build.equipment = equipment
     return build
 

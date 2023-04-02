@@ -13,6 +13,8 @@ class Equipment(Base):
     __tablename__ = "equipment"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    stats_id = mapped_column(ForeignKey("equipment_stats.id"), nullable=True)
+    stats = relationship("EquipmentStats", foreign_keys=[stats_id], lazy="joined", single_parent=True, cascade="all, delete, delete-orphan")
 
     # Armor
     helm_id: Mapped[int] = mapped_column(ForeignKey("items.id"), nullable=True)
@@ -193,7 +195,6 @@ class Equipment(Base):
                         # In case the weapon set is not empty then there should not be any additional items, so we break
                         if self_cp.get_item(slot):
                             weapon_set = other.get_weaponset(slot)
-                            print(weapon_set)
                             if weapon_set[0] or weapon_set[1]:
                                 break
                         continue

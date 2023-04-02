@@ -9,6 +9,7 @@ from models.enums.equipment_slot import EquipmentSlot
 from models.enums.rarity import Rarity
 from models.equipment import Equipment
 from models.item import Item
+from models.stats import EquipmentStats
 
 
 class API:
@@ -165,6 +166,7 @@ class API:
             raise Exception("Equipment Tab not found")
 
         equipment = Equipment()
+        stats = EquipmentStats()
         for equipment_tab_item in equipment_tab_items["equipment"]:
             # Skip items like underwater weapons and aqua breather
             try:
@@ -187,12 +189,15 @@ class API:
 
             if "stats" in equipment_tab_item:
                 stats_id = equipment_tab_item["stats"]["id"]
+                stats.add_attributes(stats=equipment_tab_item["stats"])
             elif "infix_upgrade" in item_data["details"]:
                 stats_id = item_data["details"]["infix_upgrade"]["id"]
+                stats.add_attributes(infix_upgrade=item_data["details"]["infix_upgrade"])
             else:
                 for equipment_item in char_data["equipment"]:
                     if item.item_id == equipment_item["id"] and equipment_tab_items["tab"] in equipment_item["tabs"] and "stats" in equipment_item:
                         stats_id = equipment_item["stats"]["id"]
+                        stats.add_attributes(stats=equipment_item["stats"])
                         break
                 else:
                     stats_id = None
@@ -207,4 +212,5 @@ class API:
                 for upgrade_data in equipment_tab_item["upgrades"]:
                     item.add_upgrade((await self.get_item(upgrade_data))["name"])
             equipment.add_item(item)
+        equipment.stats = stats
         return equipment
