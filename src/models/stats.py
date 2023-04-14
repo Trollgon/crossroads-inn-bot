@@ -37,7 +37,7 @@ class EquipmentStats(Base):
             attribute = Attribute[attribute]
             setattr(self, attribute.value, getattr(self, attribute.value) + value)
         except KeyError:
-            print(attribute, "ignored")
+            pass
 
     def add_attributes(self, slot: EquipmentSlot, *, stats: dict = None, infix_upgrade: dict = None, multiplier: int = 1) -> None:
         # Skip weapons in second weapon set to prevent duplicate stats
