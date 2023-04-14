@@ -20,12 +20,35 @@ class ReviewView(View):
                                      custom_id=f"{self.bot.user.id}-application-{application_id}:accept"))
         self.add_item(CallbackButton(self.deny, label="Deny", style=ButtonStyle.red,
                                      custom_id=f"{self.bot.user.id}-application-{application_id}:deny"))
+        self.add_item(CallbackButton(self.compare_stats, label="Compare Stats", style=ButtonStyle.primary,
+                                     custom_id=f"{self.bot.user.id}-application-{application_id}:stats"))
 
     async def accept(self, interaction: Interaction):
         await interaction.response.send_modal(ReviewModal(self.bot, ApplicationStatus.REVIEW_ACCEPTED, self.application_id, self))
 
     async def deny(self, interaction: Interaction):
         await interaction.response.send_modal(ReviewModal(self.bot, ApplicationStatus.REVIEW_DENIED, self.application_id, self))
+
+    async def compare_stats(self, interaction: Interaction):
+        async with Session.begin() as session:
+            application = await session.get(Application, self.application_id)
+            player_stats = application.equipment.stats.to_dict()
+            build_stats = application.build.equipment.stats.to_dict()
+            attributes, attributes_player, attributes_build = "", "", ""
+            for attribute in player_stats.keys():
+                attributes += "**" + attribute + "**\n"
+                if attribute in ["Boon Duration", "Critical Chance", "Critical Damage", "Condition Duration"]:
+                    attributes_player += str(player_stats[attribute] * 100) + "%\n"
+                    attributes_build += str(build_stats[attribute] * 100) + "%\n"
+                else:
+                    attributes_player += str(player_stats[attribute]) + "\n"
+                    attributes_build += str(build_stats[attribute]) + "\n"
+
+            embed = Embed(title="Equipment Stats", colour=application.status.colour)
+            embed.add_field(name="Attribute", value=attributes)
+            embed.add_field(name="Player", value=attributes_player)
+            embed.add_field(name="Build", value=attributes_build)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
         # Send message to user and log error

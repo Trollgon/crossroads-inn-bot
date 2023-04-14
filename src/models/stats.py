@@ -81,6 +81,14 @@ class EquipmentStats(Base):
             self.add_attribute(attribute["attribute"],
                                attribute["value"] + round(attribute["multiplier"] * attribute_adjustment))
 
+    def to_dict(self):
+        return {"Power": self.power, "Precision": self.precision, "Toughness": self.toughness,
+                "Vitality": self.vitality, "Concentration": self.concentration,
+                "Condition Damage": self.condition_damage, "Expertise": self.expertise, "Ferocity": self.ferocity,
+                "Healing Power": self.healing_power, "Boon Duration": self.boon_duration,
+                "Critical Chance": self.critical_chance, "Critical Damage": self.critical_damage,
+                "Condition Duration": self.condition_duration}
+
     def __str__(self):
         return f"Power: {self.power}\nPrecision: {self.precision}\nToughness: {self.toughness}\n" \
                f"Vitality: {self.vitality}\nConcentration: {self.concentration}\n" \

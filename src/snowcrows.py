@@ -39,7 +39,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
         item.rarity = Rarity[item_data["rarity"]]
         item.level = item_data["level"]
 
-        if item_data["type"] == "Consumable":
+        if item_data["type"] in ["Consumable", "Gizmo"]:
             break
 
         # Infusion stats
