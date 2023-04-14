@@ -32,6 +32,22 @@ class EquipmentStats(Base):
         self.ferocity = 0
         self.healing_power = 0
 
+    @property
+    def boon_duration(self):
+        return self.concentration / 1500
+
+    @property
+    def critical_chance(self):
+        return (self.precision - 1000) / 2100 + 0.05
+
+    @property
+    def critical_damage(self):
+        return self.ferocity / 1500 + 1.5
+
+    @property
+    def condition_duration(self):
+        return self.expertise / 1500
+
     def add_attribute(self, attribute: str, value: int) -> None:
         try:
             attribute = Attribute[attribute]
@@ -69,4 +85,6 @@ class EquipmentStats(Base):
         return f"Power: {self.power}\nPrecision: {self.precision}\nToughness: {self.toughness}\n" \
                f"Vitality: {self.vitality}\nConcentration: {self.concentration}\n" \
                f"Condition Damage: {self.condition_damage}\nExpertise: {self.expertise}\n" \
-               f"Ferocity: {self.ferocity}\nHealing Power: {self.healing_power}"
+               f"Ferocity: {self.ferocity}\nHealing Power: {self.healing_power}\n" \
+               f"Boon Duration: {self.boon_duration}\nCritical Chance: {self.critical_chance}\n" \
+               f"Critical Damage: {self.critical_damage}\nCondition Duration: {self.condition_duration}"
