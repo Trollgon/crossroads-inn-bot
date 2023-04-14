@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from models.base import Base
 from models.enums.attribute import Attribute
+from models.enums.equipment_slot import EquipmentSlot
 
 
 class EquipmentStats(Base):
@@ -31,25 +32,37 @@ class EquipmentStats(Base):
         self.ferocity = 0
         self.healing_power = 0
 
-    def add_attribute(self, attribute: Attribute, value: int) -> None:
-        setattr(self, attribute.value, getattr(self, attribute.value) + value)
+    def add_attribute(self, attribute: str, value: int) -> None:
+        try:
+            attribute = Attribute[attribute]
+            setattr(self, attribute.value, getattr(self, attribute.value) + value)
+        except KeyError:
+            print(attribute, "ignored")
 
-    def add_attributes(self, *, stats: dict = None, infix_upgrade: dict = None) -> None:
+    def add_attributes(self, slot: EquipmentSlot, *, stats: dict = None, infix_upgrade: dict = None, multiplier: int = 1) -> None:
+        # Skip weapons in second weapon set to prevent duplicate stats
+        if slot in EquipmentSlot.get_weapon_slots()[2:]:
+            return
+
         if stats:
             if "attributes" not in stats:
                 raise Exception("No attributes in stats")
             for attribute, value in stats["attributes"].items():
-                self.add_attribute(Attribute[attribute], int(value))
+                self.add_attribute(attribute, int(value) * multiplier)
 
         if infix_upgrade:
             if "attributes" not in infix_upgrade:
                 raise Exception("No attributes in infix_upgrade")
             for attribute in infix_upgrade["attributes"]:
-                self.add_attribute(Attribute[attribute["attribute"]], attribute["modifier"])
+                self.add_attribute(attribute["attribute"], attribute["modifier"] * multiplier)
 
-    def calculate_attributes(self, attributes: list, attribute_adjustment: int = None):
+    def calculate_attributes(self, slot: EquipmentSlot, attributes: list, attribute_adjustment: int = None):
+        # Skip weapons in second weapon set to prevent duplicate stats
+        if slot in EquipmentSlot.get_weapon_slots()[2:]:
+            return
+
         for attribute in attributes:
-            self.add_attribute(Attribute[attribute["attribute"]],
+            self.add_attribute(attribute["attribute"],
                                attribute["value"] + round(attribute["multiplier"] * attribute_adjustment))
 
     def __str__(self):

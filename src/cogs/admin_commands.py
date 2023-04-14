@@ -126,7 +126,7 @@ class AdminCommands(commands.Cog):
         async with Session.begin() as session:
             build = await Build.find(session, url=snowcrows_url)
             if build:
-                build.archive()
+                await build.archive()
                 await interaction.response.send_message("Build was removed", ephemeral=True)
             else:
                 await interaction.response.send_message("Build not found", ephemeral=True)

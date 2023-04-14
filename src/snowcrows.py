@@ -39,8 +39,14 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
         item.rarity = Rarity[item_data["rarity"]]
         item.level = item_data["level"]
 
-        if item_data["type"] == "UpgradeComponent":
+        if item_data["type"] == "Consumable":
             break
+
+        # Infusion stats
+        if item_data["type"] == "UpgradeComponent":
+            amount = int(table_data[i+1].p.span.text.replace("x", ""))
+            stats.add_attributes(EquipmentSlot.Helm, infix_upgrade=item_data["details"]["infix_upgrade"], multiplier=amount)
+            continue
 
         if "infix_upgrade" in item_data["details"]:
             stats_id = item_data["details"]["infix_upgrade"]["id"]
@@ -51,23 +57,6 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
             raise Exception(f"Unable to determine stats for {item.name} on {url}")
         stats_data = await api.get_item_stats(stats_id)
         item.stats = stats_data["name"]
-
-        # Add stat attributes
-        if "infix_upgrade" in item_data["details"]:
-            stats.add_attributes(infix_upgrade=item_data["details"]["infix_upgrade"])
-        else:
-            attribute_adjustment = item_data["details"]["attribute_adjustment"]
-            if stats_id in item_data["details"]["stat_choices"]:
-                attributes = stats_data["attributes"]
-            else:
-                for id in item_data["details"]["stat_choices"]:
-                    stats_data = await api.get_item_stats(id)
-                    if stats_data["name"] == item.stats:
-                        attributes = stats_data["attributes"]
-                        break
-                else:
-                    raise Exception(f"Invalid stats id: {url} at {item.name} (id: {item.item_id}, stat_id: {stats_id})")
-            stats.calculate_attributes(attributes, attribute_adjustment)
 
         upgrade_ids = []
         if f"data-armory-{item.item_id}-upgrades" in str(div):
@@ -96,6 +85,24 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
         else:
             item.type = slot
         item.slot = EquipmentSlot[slot]
+
+        # Add stat attributes
+        if "infix_upgrade" in item_data["details"]:
+            stats.add_attributes(item.slot, infix_upgrade=item_data["details"]["infix_upgrade"])
+        else:
+            attribute_adjustment = item_data["details"]["attribute_adjustment"]
+            if stats_id in item_data["details"]["stat_choices"]:
+                attributes = stats_data["attributes"]
+            else:
+                for id in item_data["details"]["stat_choices"]:
+                    stats_data = await api.get_item_stats(id)
+                    if stats_data["name"] == item.stats:
+                        attributes = stats_data["attributes"]
+                        break
+                else:
+                    raise Exception(f"Invalid stats id: {url} at {item.name} (id: {item.item_id}, stat_id: {stats_id})")
+            stats.calculate_attributes(item.slot, attributes, attribute_adjustment)
+
         equipment.add_item(item)
     equipment.stats = stats
     build.equipment = equipment
