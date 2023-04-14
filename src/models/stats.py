@@ -34,19 +34,19 @@ class EquipmentStats(Base):
 
     @property
     def boon_duration(self):
-        return self.concentration / 1500
+        return round(self.concentration / 1500, 4)
 
     @property
     def critical_chance(self):
-        return (self.precision - 1000) / 2100 + 0.05
+        return round((self.precision - 1000) / 2100 + 0.05, 4)
 
     @property
     def critical_damage(self):
-        return self.ferocity / 1500 + 1.5
+        return round(self.ferocity / 1500 + 1.5, 4)
 
     @property
     def condition_duration(self):
-        return self.expertise / 1500
+        return round(self.expertise / 1500, 4)
 
     def add_attribute(self, attribute: str, value: int) -> None:
         try:
