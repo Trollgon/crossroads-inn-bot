@@ -45,6 +45,8 @@ class ReviewView(View):
                     attributes_build += str(build_stats[attribute]) + "\n"
 
             embed = Embed(title="Equipment Stats", colour=application.status.colour)
+            embed.description = f"**User:** {interaction.guild.get_member(application.discord_user_id)}\n" \
+                                f"**Build:** {application.build.to_link()}\n"
             embed.add_field(name="Attribute", value=attributes)
             embed.add_field(name="Player", value=attributes_player)
             embed.add_field(name="Build", value=attributes_build)
