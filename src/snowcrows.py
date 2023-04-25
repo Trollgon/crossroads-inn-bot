@@ -113,7 +113,7 @@ async def get_sc_builds(profession: Profession):
     # Find all recommended and viable builds that are not kite builds
     links = []
     for category in ["recommended", "viable"]:
-        resp = await sc_get(f"https://snowcrows.com/en/builds?profession={profession.value}&category={category}")
+        resp = await sc_get(f"https://snowcrows.com/en/builds?profession={profession.name}&category={category}")
         sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
         for link in sc_soup.find_all("a", href=True):
             if link["href"].startswith("/en/builds/") and "kite" not in link["href"]:

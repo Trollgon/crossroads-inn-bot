@@ -1,9 +1,9 @@
 import os
 from discord import Interaction
 from sqlalchemy import select
-
 from database import Session
 from helpers.embeds import generate_error_embed
+from helpers.logging import log_to_channel
 from models.application import Application
 from models.enums.application_status import ApplicationStatus
 from models.feedback import *
@@ -28,10 +28,13 @@ class ApplicationOverview(discord.ui.View):
         async with Session.begin() as session:
             stmt = select(Application).where(Application.discord_user_id == interaction.user.id)\
                 .where(Application.status == ApplicationStatus.WAITING_FOR_REVIEW)
-            res = (await session.execute(stmt)).scalar()
-            if res:
-                await interaction.response.send_message(ephemeral=True, content="You already have an open application. "
-                                                                                "Please wait until it has been reviewed.")
+            application = (await session.execute(stmt)).scalar()
+            if application:
+                response = await interaction.response.send_message(
+                    ephemeral=True,
+                    content="You already have an open application. Please wait until it has been reviewed.\n\n"
+                            "If you want you can close your application by clicking the button below.",
+                    view=CloseApplicationView(self.bot, application.id))
                 return
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
@@ -39,6 +42,37 @@ class ApplicationOverview(discord.ui.View):
         # Send message to user and log error
         await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
         await super().on_error(interaction, error, item)
+
+
+class CloseApplicationView(discord.ui.View):
+    def __init__(self, bot: commands.Bot, application_id: int):
+        super().__init__()
+        self.bot = bot
+        self.application_id = application_id
+
+    @discord.ui.button(label='Close Application', style=discord.ButtonStyle.danger)
+    async def close_application(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.stop()
+        # Update application status
+        async with Session.begin() as session:
+            application = await session.get(Application, self.application_id)
+            application.status = ApplicationStatus.CLOSED_BY_APPLICANT
+
+            # Delete review message
+            rr_channel = interaction.guild.get_channel(int(os.getenv("RR_CHANNEL_ID")))
+            await (await rr_channel.fetch_message(application.review_message_id)).delete()
+            application.review_message_id = None
+
+            # Log to log channel
+            embed = Embed(title=f"Application closed by user:", colour=discord.Color.red())
+            embed.description = f"**ID:** {self.application_id}\n" \
+                                f"**User:** {interaction.guild.get_member(application.discord_user_id)}"
+            await log_to_channel(self.bot, embed)
+
+        # Send message to user
+        await interaction.response.send_message(ephemeral=True,
+                                                content=f"{FeedbackLevel.SUCCESS.emoji} Your application has been "
+                                                        f"closed. You can apply again.")
 
 
 class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):

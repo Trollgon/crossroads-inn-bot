@@ -8,8 +8,9 @@ class ApplicationStatus(Enum):
     DENIED = 1
     NO_REVIEW_REQUESTED = 2
     WAITING_FOR_REVIEW = 3
-    REVIEW_ACCEPTED = 4
-    REVIEW_DENIED = 5
+    CLOSED_BY_APPLICANT = 4
+    REVIEW_ACCEPTED = 5
+    REVIEW_DENIED = 6
 
     @staticmethod
     def from_feedback(feedback: FeedbackLevel):
@@ -31,6 +32,8 @@ class ApplicationStatus(Enum):
                 return "no review requested"
             case ApplicationStatus.WAITING_FOR_REVIEW:
                 return "waiting for review"
+            case ApplicationStatus.CLOSED_BY_APPLICANT:
+                return "closed by applicant"
 
     @property
     def colour(self) -> discord.Colour:
