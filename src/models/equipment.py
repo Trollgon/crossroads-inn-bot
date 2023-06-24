@@ -231,7 +231,7 @@ class Equipment(Base):
             fbg.add(Feedback(f"**You are not using the correct weapons:**\n"
                              f"**Your Weapons:** {self.get_weapons_str()}\n"
                              f"**Correct Weapons:** {other.get_weapons_str()}\n",
-                             FeedbackLevel.ERROR))
+                             FeedbackLevel.WARNING))
             return fbg
 
         # Select the feedback with the least errors and return it
