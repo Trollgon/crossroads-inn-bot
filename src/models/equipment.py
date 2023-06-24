@@ -131,7 +131,7 @@ class Equipment(Base):
             if not other.get_item(slot):
                 continue
             if not self.get_item(slot):
-                fbg.add(Feedback(f"{other.type} is missing", FeedbackLevel.ERROR))
+                fbg.add(Feedback(f"{other.get_item(slot).type} is missing", FeedbackLevel.ERROR))
                 continue
             fbg = self.get_item(slot).check_basics(fbg)
             fbg = self.get_item(slot).compare(other.get_item(slot), fbg)
@@ -143,10 +143,11 @@ class Equipment(Base):
         return fbg
 
     def compare_trinkets(self, other) -> FeedbackGroup:
+        self.ring_1 = None
         fbg = FeedbackGroup("Trinkets")
         for slot in [EquipmentSlot.Backpack, EquipmentSlot.Amulet]:
             if not self.get_item(slot):
-                fbg.add(Feedback(f"{other.type} is missing", FeedbackLevel.ERROR))
+                fbg.add(Feedback(f"{other.get_item(slot).type} is missing", FeedbackLevel.ERROR))
                 continue
             fbg = self.get_item(slot).check_basics(fbg, Rarity.Ascended)
             fbg = self.get_item(slot).compare(other.get_item(slot), fbg)
@@ -158,7 +159,7 @@ class Equipment(Base):
             item_stats_other = []
             for slot in slots:
                 if not self.get_item(slot):
-                    fbg.add(Feedback(f"{other.type} is missing", FeedbackLevel.ERROR))
+                    fbg.add(Feedback(f"{other.get_item(slot).type} is missing", FeedbackLevel.ERROR))
                     item_missing = True
                 else:
                     fbg = self.get_item(slot).check_basics(fbg, Rarity.Ascended)
