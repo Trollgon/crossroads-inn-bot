@@ -143,7 +143,6 @@ class Equipment(Base):
         return fbg
 
     def compare_trinkets(self, other) -> FeedbackGroup:
-        self.ring_1 = None
         fbg = FeedbackGroup("Trinkets")
         for slot in [EquipmentSlot.Backpack, EquipmentSlot.Amulet]:
             if not self.get_item(slot):
