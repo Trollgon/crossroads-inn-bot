@@ -141,8 +141,8 @@ class AdminCommands(commands.Cog):
             for profession in Profession:
                 urls = await get_sc_builds(profession)
                 for url in urls:
-                    build = await Build.find(session, url=url)
                     build_sc = await get_sc_build(url)
+                    build = await Build.find(session, name=build_sc.name)
                     # If the build already exists in the DB: check if the gear is the same. if not archive old build
                     if build:
                         fbc = build.equipment.compare(build_sc.equipment)
@@ -150,7 +150,7 @@ class AdminCommands(commands.Cog):
                             # Don't need to add it again if the gear is the same
                             continue
                         else:
-                            build.archive()
+                            await build.archive()
                     session.add(build_sc)
         await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
 

@@ -31,12 +31,14 @@ class Build(Base):
         return instance
 
     @staticmethod
-    async def find(session: AsyncSession, *, id: int = None, url: str = None, archived: bool = False):
+    async def find(session: AsyncSession, *, id: int = None, url: str = None, name: str = None, archived: bool = False):
         stmt = select(Build).where(Build.archived == archived)
         if id:
             stmt = stmt.where(Build.id == id)
         if url:
             stmt = stmt.where(Build.url == url)
+        if name:
+            stmt = stmt.where(Build.name == name)
         result = await session.execute(stmt)
         instance = result.scalar()
         return instance
