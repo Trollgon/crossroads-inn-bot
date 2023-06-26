@@ -140,8 +140,10 @@ class AdminCommands(commands.Cog):
         async with Session.begin() as session:
             for profession in Profession:
                 urls = await get_sc_builds(profession)
+                new_builds = []
                 for url in urls:
                     build_sc = await get_sc_build(url)
+                    new_builds.append(build_sc.name)
                     build = await Build.find(session, name=build_sc.name)
                     # If the build already exists in the DB: check if the gear is the same. if not archive old build
                     if build:
@@ -152,6 +154,12 @@ class AdminCommands(commands.Cog):
                         else:
                             await build.archive()
                     session.add(build_sc)
+
+                # Archive builds that are not in the list of new builds
+                for build in await Build.from_profession(session, profession):
+                    if build.name not in new_builds:
+                        await build.archive()
+
         await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
 
     @app_commands.guild_only
