@@ -10,6 +10,7 @@ from models.feedback import *
 from api import API
 from views.application import ApplicationView
 from discord.ext import commands
+from views.submit_log import SubmitLogModal
 
 
 class ApplicationOverview(discord.ui.View):
@@ -37,6 +38,24 @@ class ApplicationOverview(discord.ui.View):
                     view=CloseApplicationView(self.bot, application.id))
                 return
         await interaction.response.send_modal(ApplicationModal(self.bot))
+
+    @discord.ui.button(label='Submit Log', style=discord.ButtonStyle.primary, custom_id='persistent_view:submit_log')
+    async def submit_log(self, interaction: discord.Interaction, button: discord.ui.Button):
+        tier = None
+
+        # Check if user already has role
+        for role in interaction.user.roles:
+            if role.id == int(os.getenv("T1_ROLE_ID")):
+                tier = 2
+            if role.id == int(os.getenv("T2_ROLE_ID")):
+                tier = 3
+            if role.id == int(os.getenv("T3_ROLE_ID")):
+                await interaction.response.send_message(ephemeral=True, content="You are already at Tier 3.")
+                return
+        if not tier:
+            await interaction.response.send_message(ephemeral=True, content="You need to be at least Tier 1 to submit a log.")
+            return
+        await interaction.response.send_modal(SubmitLogModal(self.bot, 2))
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
         # Send message to user and log error
