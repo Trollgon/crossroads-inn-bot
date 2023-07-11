@@ -8,6 +8,7 @@ from api import API
 from database import Session
 from helpers.custom_embed import CustomEmbed
 from helpers.embeds import generate_error_embed
+from helpers.log_checks import check_log
 from helpers.logging import log_to_channel
 from models.enums.log_status import LogStatus
 from models.feedback import FeedbackLevel
@@ -90,7 +91,9 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
                 await interaction.followup.send(embed=embed, ephemeral=True)
                 return
 
-            # TODO: run automatic log checks
+            # Check log
+            fbc = check_log(log_json, await api.get_account_name())
+            fbc.to_embed(embed)
 
             # Create log
             log = Log()
@@ -100,15 +103,20 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
             log.fight_name = log_json["fightName"]
             log.is_cm  = log_json["isCM"]
             log.log_url = str(self.log_url)
-            log.status = LogStatus.WAITING_FOR_REVIEW
+            log.status = LogStatus.DENIED if fbc.level == FeedbackLevel.ERROR else LogStatus.WAITING_FOR_REVIEW
             session.add(log)
             await session.flush()
             await session.refresh(log)
+
+            if log.status == LogStatus.DENIED:
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
 
             # Create review message
             review_embed = Embed(title="Log Review",
                           description=f"{interaction.user} submitted a log to apply for tier {log.tier}.\n\n"
                                       f"[{log.fight_name}]({log.log_url})")
+            fbc.to_embed(review_embed)
 
             # TODO: add automatic log check feedback
 
