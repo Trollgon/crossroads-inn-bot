@@ -33,7 +33,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
         await interaction.response.defer(ephemeral=True, thinking=True)
 
         # Create embed
-        embed = CustomEmbed(self.bot, title="Tier 1 Application", color=FeedbackLevel.ERROR.colour)
+        embed = CustomEmbed(self.bot, title="Log Feedback", color=FeedbackLevel.ERROR.colour)
 
         # Check if log url is valid
         pattern = re.compile("https:\/\/dps\.report\/[a-zA-Z\-0-9\_]+")
@@ -52,8 +52,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
             return
 
         # Check KP
-        # TODO: do proper kp check
-        kp_feedback = await api.check_kp()
+        kp_feedback = await api.check_kp(self.tier)
         embed = kp_feedback.to_embed(embed)
         if kp_feedback.level == FeedbackLevel.ERROR:
             await interaction.followup.send(embed=embed, ephemeral=True)

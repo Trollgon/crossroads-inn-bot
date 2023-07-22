@@ -133,7 +133,7 @@ class ApplicationModal(discord.ui.Modal, title="Tier 1 Application"):
             failed_registration = True
 
         # Check KP
-        kp_feedback = await api.check_kp()
+        kp_feedback = await api.check_kp(1)
         embed = kp_feedback.to_embed(embed)
         if kp_feedback.level == FeedbackLevel.ERROR:
             failed_registration = True
