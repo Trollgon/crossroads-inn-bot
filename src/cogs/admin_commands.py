@@ -3,12 +3,14 @@ import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 import typing
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, delete
 from database import Session
 from helpers.custom_embed import CustomEmbed
 from models.application import Application
+from models.bosses import Boss
 from models.build import Build
 from models.enums.application_status import ApplicationStatus
+from models.enums.pools import KillProofPool, BossLogPool
 from models.enums.profession import Profession
 from models.feedback import FeedbackLevel
 from snowcrows import get_sc_build, get_sc_builds
@@ -205,3 +207,63 @@ class AdminCommands(commands.Cog):
                 v += f"{r.name}: {r.count}\n"
             embed.add_field(name="Most popular accepted builds:", value=v, inline=False)
         await interaction.followup.send(embed=embed)
+
+
+    bosses = app_commands.Group(name="bosses", description="Manage the list of bosses")
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @bosses.command(name="list", description="Get a list of all bosses")
+    async def bosses_list(self, interaction: Interaction):
+        async with Session.begin() as session:
+            bosses = await Boss.all(session)
+            msg = f"**eiEncounterID, boss_name, is_cm, kp_pool, log_pool, achievement_id**\n"
+            for boss in bosses:
+                msg += f"{boss.to_csv()}\n"
+
+        await interaction.response.send_message(msg, ephemeral=True)
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @bosses.command(name="init", description="Initialize the bosses in the database")
+    async def bosses_init(self, interaction: Interaction):
+        async with Session.begin() as session:
+            await session.execute(delete(Boss))
+            await Boss.init(session)
+        await interaction.response.send_message("Bosses initialized", ephemeral=True)
+
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @bosses.command(name="add", description="Add a boss to the database")
+    async def bosses_add(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int):
+        async with Session.begin() as session:
+            boss = await Boss.get(session, ei_encounter_id, is_cm)
+            if boss:
+                await interaction.response.send_message(f"Boss already exists:\n"
+                                                        f"{boss}\n\n"
+                                                        f"Use `/bosses delete` first to change it",
+                                                        ephemeral=True)
+                return
+
+            boss = Boss(ei_encounter_id=ei_encounter_id, boss_name=boss_name, is_cm=is_cm, kp_pool=kp_pool, log_pool=log_pool, achievement_id=achievement_id)
+            session.add(boss)
+        await interaction.response.send_message("Boss added", ephemeral=True)
+
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @bosses.command(name="delete", description="Delete a boss from the database")
+    async def bosses_delete(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool):
+        async with Session.begin() as session:
+            boss = await Boss.get(session, ei_encounter_id, is_cm)
+            if not boss:
+                await interaction.response.send_message(f"Boss not found", ephemeral=True)
+                return
+
+            await session.execute(delete(Boss).where(Boss.ei_encounter_id == ei_encounter_id).where(Boss.is_cm == is_cm))
+        await interaction.response.send_message("Boss deleted", ephemeral=True)
