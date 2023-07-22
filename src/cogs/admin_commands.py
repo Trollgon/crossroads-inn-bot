@@ -209,12 +209,12 @@ class AdminCommands(commands.Cog):
         await interaction.followup.send(embed=embed)
 
 
-    bosses = app_commands.Group(name="bosses", description="Manage the list of bosses")
+    boss = app_commands.Group(name="boss", description="Manage the list of bosses")
 
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @bosses.command(name="list", description="Get a list of all bosses")
+    @boss.command(name="list", description="Get a list of all bosses")
     async def bosses_list(self, interaction: Interaction):
         async with Session.begin() as session:
             bosses = await Boss.all(session)
@@ -227,7 +227,7 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @bosses.command(name="init", description="Initialize the bosses in the database")
+    @boss.command(name="init", description="Initialize the bosses in the database")
     async def bosses_init(self, interaction: Interaction):
         async with Session.begin() as session:
             await session.execute(delete(Boss))
@@ -238,7 +238,7 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @bosses.command(name="add", description="Add a boss to the database")
+    @boss.command(name="add", description="Add a boss to the database")
     async def bosses_add(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int):
         async with Session.begin() as session:
             boss = await Boss.get(session, ei_encounter_id, is_cm)
@@ -257,7 +257,7 @@ class AdminCommands(commands.Cog):
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
     @app_commands.checks.has_permissions(manage_roles=True)
-    @bosses.command(name="delete", description="Delete a boss from the database")
+    @boss.command(name="delete", description="Delete a boss from the database")
     async def bosses_delete(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool):
         async with Session.begin() as session:
             boss = await Boss.get(session, ei_encounter_id, is_cm)
