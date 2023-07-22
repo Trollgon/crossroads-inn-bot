@@ -17,10 +17,10 @@ class Config(Base):
         self.value = value
 
     @staticmethod
-    def init(session: AsyncSession):
+    async def init(session: AsyncSession):
         session.add(Config(ConfigKey.MIN_GW2_BUILD, "147894"))
 
 
     @staticmethod
     async def all(session: AsyncSession):
-        return await session.execute(select(Config)).scalars().all()
+        return (await session.execute(select(Config))).scalars().all()

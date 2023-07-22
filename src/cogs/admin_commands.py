@@ -9,7 +9,9 @@ from helpers.custom_embed import CustomEmbed
 from models.application import Application
 from models.bosses import Boss
 from models.build import Build
+from models.config import Config
 from models.enums.application_status import ApplicationStatus
+from models.enums.config_key import ConfigKey
 from models.enums.pools import KillProofPool, BossLogPool
 from models.enums.profession import Profession
 from models.feedback import FeedbackLevel
@@ -267,3 +269,46 @@ class AdminCommands(commands.Cog):
 
             await session.execute(delete(Boss).where(Boss.ei_encounter_id == ei_encounter_id).where(Boss.is_cm == is_cm))
         await interaction.response.send_message("Boss deleted", ephemeral=True)
+
+
+    config = app_commands.Group(name="config", description="Configure the bot")
+
+    @app_commands.guild_only
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @config.command(name="list", description="Show the current configuration")
+    async def config_list(self, interaction: Interaction):
+        async with Session.begin() as session:
+            config = await Config.all(session)
+            msg = ""
+            for c in config:
+                msg += f"**{c.key.value} ({c.key.name}):** {c.value}\n"
+
+        await interaction.response.send_message(msg, ephemeral=True)
+
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @config.command(name="init", description="Initialize the config")
+    async def config_init(self, interaction: Interaction):
+        async with Session.begin() as session:
+            await session.execute(delete(Config))
+            await Config.init(session)
+        await interaction.response.send_message("Config initialized", ephemeral=True)
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @config.command(name="set", description="Set a config value")
+    async def config_set(self, interaction: Interaction, key: ConfigKey, value: str):
+        async with Session.begin() as session:
+            config = await session.get(Config, key)
+            if not config:
+                config = Config(key=key, value=value)
+                session.add(config)
+            else:
+                config.value = value
+        await interaction.response.send_message("Config updated", ephemeral=True)
+
