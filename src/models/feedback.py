@@ -81,13 +81,10 @@ class FeedbackGroup:
 
 class FeedbackCollection:
     def __init__(self):
-        self.level: FeedbackLevel = FeedbackLevel.SUCCESS
         self.feedback: list[FeedbackGroup] = []
 
     def add(self, feedback_group: FeedbackGroup) -> None:
         self.feedback.append(feedback_group)
-        if feedback_group.level.value > self.level.value:
-            self.level = feedback_group.level
 
     def to_embed(self, embed: Embed = Embed(title="Feedback"), inline: bool = False) -> Embed:
         for fb in self.feedback:
@@ -96,3 +93,7 @@ class FeedbackCollection:
                 # Add additional whitespace for better separation
                 embed.add_field(name=" ", value="", inline=False)
         return embed
+
+    @property
+    def level(self) -> FeedbackLevel:
+        return min(self.feedback, key=lambda x: x.level).level
