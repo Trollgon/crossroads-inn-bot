@@ -77,32 +77,22 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
 
+        # Create log
+        log = Log()
+        log.discord_user_id = interaction.user.id
+        log.tier = self.tier
+        log.encounter_id = log_json["eiEncounterID"]
+        log.fight_name = log_json["fightName"]
+        log.is_cm = log_json["isCM"]
+        log.log_url = str(self.log_url)
+
+        # Check log
+        fbc = await check_log(log_json, await api.get_account_name(), self.tier, interaction.user.id, self.log_url, log)
+        fbc.to_embed(embed)
+
+        log.status = LogStatus.DENIED if fbc.level == FeedbackLevel.ERROR else LogStatus.WAITING_FOR_REVIEW
 
         async with Session.begin() as session:
-            # Check if a log for this boss was already submitted
-            stmt = select(Log).where(Log.discord_user_id == interaction.user.id)\
-                .where(Log.status != LogStatus.DENIED).where(Log.status != LogStatus.REVIEW_DENIED)\
-                .where(Log.encounter_id == log_json["eiEncounterID"])
-            if (await session.execute(stmt)).scalar():
-                embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} You have already submitted a log for this boss",
-                                value="",
-                                inline=False)
-                await interaction.followup.send(embed=embed, ephemeral=True)
-                return
-
-            # Check log
-            fbc = check_log(log_json, await api.get_account_name())
-            fbc.to_embed(embed)
-
-            # Create log
-            log = Log()
-            log.discord_user_id = interaction.user.id
-            log.tier = self.tier
-            log.encounter_id = log_json["eiEncounterID"]
-            log.fight_name = log_json["fightName"]
-            log.is_cm  = log_json["isCM"]
-            log.log_url = str(self.log_url)
-            log.status = LogStatus.DENIED if fbc.level == FeedbackLevel.ERROR else LogStatus.WAITING_FOR_REVIEW
             session.add(log)
             await session.flush()
             await session.refresh(log)

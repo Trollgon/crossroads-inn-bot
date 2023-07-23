@@ -267,7 +267,7 @@ class AdminCommands(commands.Cog):
                 await interaction.response.send_message(f"Boss not found", ephemeral=True)
                 return
 
-            await session.execute(delete(Boss).where(Boss.ei_encounter_id == ei_encounter_id).where(Boss.is_cm == is_cm))
+            await session.execute(delete(Boss).where(Boss.encounter_id == ei_encounter_id).where(Boss.is_cm == is_cm))
         await interaction.response.send_message("Boss deleted", ephemeral=True)
 
 
@@ -311,4 +311,3 @@ class AdminCommands(commands.Cog):
             else:
                 config.value = value
         await interaction.response.send_message("Config updated", ephemeral=True)
-
