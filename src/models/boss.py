@@ -9,7 +9,7 @@ from models.enums.pools import *
 class Boss(Base):
     __tablename__ = "bosses"
 
-    ei_encounter_id: Mapped[int] = mapped_column(primary_key=True)
+    encounter_id: Mapped[int] = mapped_column(primary_key=True)
     is_cm: Mapped[bool] = mapped_column(primary_key=True)
     boss_name: Mapped[str]
     kp_pool: Mapped[KillProofPool]
@@ -18,7 +18,7 @@ class Boss(Base):
 
     def __init__(self,ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int | None):
         super(Boss, self).__init__()
-        self.ei_encounter_id = ei_encounter_id
+        self.encounter_id = ei_encounter_id
         self.is_cm = is_cm
         self.boss_name = boss_name
         self.kp_pool = kp_pool
@@ -92,7 +92,7 @@ class Boss(Base):
         return await session.get(Boss, (ei_encounter_id, is_cm))
 
     def to_csv(self):
-        return f"{self.ei_encounter_id}, " \
+        return f"{self.encounter_id}, " \
                f"{self.boss_name}, " \
                f"{self.is_cm}, " \
                f"{self.kp_pool.value}, " \
@@ -100,7 +100,7 @@ class Boss(Base):
                f"{self.achievement_id}"
 
     def __str__(self):
-        return f"Boss(ei_encounter_id={self.ei_encounter_id}, " \
+        return f"Boss(ei_encounter_id={self.encounter_id}, " \
                f"is_cm={self.is_cm}, " \
                f"boss_name={self.boss_name}, " \
                f"kp_pool={self.kp_pool}, " \

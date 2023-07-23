@@ -7,7 +7,7 @@ from sqlalchemy import select, func, desc, delete
 from database import Session
 from helpers.custom_embed import CustomEmbed
 from models.application import Application
-from models.bosses import Boss
+from models.boss import Boss
 from models.build import Build
 from models.config import Config
 from models.enums.application_status import ApplicationStatus
