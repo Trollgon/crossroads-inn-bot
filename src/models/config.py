@@ -8,7 +8,7 @@ from models.enums.config_key import ConfigKey
 class Config(Base):
     __tablename__ = "config"
 
-    key: Mapped[ConfigKey] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(primary_key=True)
     value: Mapped[str] = mapped_column(nullable=False)
 
     def __init__(self, key: ConfigKey, value: str):
@@ -24,3 +24,8 @@ class Config(Base):
     @staticmethod
     async def all(session: AsyncSession):
         return (await session.execute(select(Config))).scalars().all()
+
+    @staticmethod
+    async def to_dict(session: AsyncSession):
+        configs = await Config.all(session)
+        return {ConfigKey[config.key]: config.value for config in configs}
