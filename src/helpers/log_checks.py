@@ -32,7 +32,7 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
 
     async with Session.begin() as session:
         # Checkm if this exact log was already submitted
-        stmt = select(Log).where(Log.log_url == log_url).where(Log.discord_user_id == discord_user_id)
+        stmt = select(Log).where(Log.log_url == log_url).where(Log.discord_user_id == discord_user_id).where(Log.status != LogStatus.DENIED)
         if (await session.execute(stmt)).scalar():
             fbg_valid.add(Feedback(f"You already submitted this log.", FeedbackLevel.ERROR))
 
@@ -66,12 +66,12 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
 
     if tier == 2:
         if boss_pools[BossLogPool.POOL_1] > 1:
-            fbg_valid.add(Feedback(f"You can only submit one log from {BossLogPool.POOL_1.value}", FeedbackLevel.ERROR))
+            fbg_valid.add(Feedback(f"You can only submit one log from pool {BossLogPool.POOL_1.value}", FeedbackLevel.ERROR))
     elif tier == 3:
         if boss_pools[BossLogPool.POOL_1] > 0 or boss_pools[BossLogPool.POOL_2] > 0:
-            fbg_valid.add(Feedback(f"You can only submit logs from {BossLogPool.POOL_3.value} and {BossLogPool.POOL_4}", FeedbackLevel.ERROR))
+            fbg_valid.add(Feedback(f"You can only submit logs from pool {BossLogPool.POOL_3.value} and {BossLogPool.POOL_4.value}", FeedbackLevel.ERROR))
         if boss_pools[BossLogPool.POOL_3] > 2:
-            fbg_valid.add(Feedback(f"At least one log must be from {BossLogPool.POOL_4.value}", FeedbackLevel.ERROR))
+            fbg_valid.add(Feedback(f"At least one log must be from pool {BossLogPool.POOL_4.value}", FeedbackLevel.ERROR))
 
     # Don't need to check performance if the log is invalid
     if fbg_valid.level == FeedbackLevel.ERROR:

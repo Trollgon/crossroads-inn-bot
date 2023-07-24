@@ -67,9 +67,9 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
                     try:
                         log_json = await r.json()
                     except Exception as e:
-                        error = f"{self.log_url}\n{e}"
+                        error = f"{str(self.log_url)}\n{e}"
                 else:
-                    error = f"{str(self.log_url)}\n{r.status}: {r.text()}"
+                    error = f"{str(self.log_url)}\n{r.status}: {await r.text()}"
 
         if error:
             embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Error while parsing log", value=error,
@@ -89,7 +89,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
         log.log_url = str(self.log_url)
 
         # Check log
-        fbc = await check_log(log_json, await api.get_account_name(), self.tier, interaction.user.id, self.log_url, log)
+        fbc = await check_log(log_json, await api.get_account_name(), self.tier, interaction.user.id, str(self.log_url), log)
         fbc.to_embed(embed)
 
         log.status = LogStatus.DENIED if fbc.level == FeedbackLevel.ERROR else LogStatus.WAITING_FOR_REVIEW

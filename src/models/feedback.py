@@ -96,4 +96,4 @@ class FeedbackCollection:
 
     @property
     def level(self) -> FeedbackLevel:
-        return min(self.feedback, key=lambda x: x.level).level
+        return max(self.feedback, key=lambda x: x.level).level

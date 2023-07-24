@@ -5,8 +5,11 @@ from sqlalchemy import select
 from cogs.admin_commands import AdminCommands
 from models.application import Application
 from models.enums.application_status import ApplicationStatus
+from models.enums.log_status import LogStatus
+from models.log import Log
 from views.application_overview import ApplicationOverview
 from database import init_db, Session
+from views.log_review import LogReviewView
 from views.review import ReviewView
 
 intents = discord.Intents.default()
@@ -29,5 +32,10 @@ async def on_ready():
         applications = (await session.execute(stmt)).scalars()
         for application in applications:
             bot.add_view(ReviewView(bot, application.id))
+
+        stmt = select(Log).where(Log.status == LogStatus.WAITING_FOR_REVIEW)
+        logs = (await session.execute(stmt)).scalars()
+        for log in logs:
+            bot.add_view(LogReviewView(bot, log.id))
 
 bot.run(os.getenv("DISCORD_TOKEN"))

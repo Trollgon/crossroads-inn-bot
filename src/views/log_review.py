@@ -3,8 +3,12 @@ import discord
 from discord import Interaction, ButtonStyle, Embed
 from discord.ext import commands
 from discord.ui import View, Modal
+from sqlalchemy import select, func
+
 from database import Session
 from helpers.emotes import get_random_success_emote
+from models.config import Config
+from models.enums.config_key import ConfigKey
 from models.enums.log_status import LogStatus
 from models.log import Log
 from views.callback_button import CallbackButton
@@ -12,19 +16,19 @@ from helpers.logging import log_to_channel
 
 
 class LogReviewView(View):
-    def __init__(self, bot: commands.Bot, application_id: int):
+    def __init__(self, bot: commands.Bot, log_id: int):
         super().__init__(timeout=None)
         self.bot = bot
-        self.application_id = application_id
+        self.log_id = log_id
         self.add_item(CallbackButton(self.accept, label="Accept", style=ButtonStyle.green,
-                                     custom_id=f"{self.bot.user.id}-application-{application_id}:accept"))
+                                     custom_id=f"{self.bot.user.id}-application-{log_id}:accept"))
         self.add_item(CallbackButton(self.deny, label="Deny", style=ButtonStyle.red,
-                                     custom_id=f"{self.bot.user.id}-application-{application_id}:deny"))
+                                     custom_id=f"{self.bot.user.id}-application-{log_id}:deny"))
     async def accept(self, interaction: Interaction):
-        await interaction.response.send_modal(LogReviewModal(self.bot, LogStatus.REVIEW_ACCEPTED, self.application_id, self))
+        await interaction.response.send_modal(LogReviewModal(self.bot, LogStatus.REVIEW_ACCEPTED, self.log_id, self))
 
     async def deny(self, interaction: Interaction):
-        await interaction.response.send_modal(LogReviewModal(self.bot, LogStatus.REVIEW_DENIED, self.application_id, self))
+        await interaction.response.send_modal(LogReviewModal(self.bot, LogStatus.REVIEW_DENIED, self.log_id, self))
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
         # Send message to user and log error
         await interaction.response.send_message(ephemeral=True, content="An unknown error occured. Please try again later.")
@@ -58,20 +62,36 @@ class LogReviewModal(Modal, title="Log review"):
                 await interaction.followup.send(content=f"This log has already been {log.status} by {reviewer.mention}", ephemeral=True)
                 return
 
-            # Add role and send feedback message
+            # Send feedback message
             emote = ""
+            role_assignment_text = ""
             ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
             rr_channel = interaction.guild.get_channel(int(os.getenv("RR_CHANNEL_ID")))
             member = interaction.guild.get_member(log.discord_user_id)
             if self.status == LogStatus.REVIEW_ACCEPTED:
+                roles = []
+                stmt = select(func.count(Log.id)).where(Log.discord_user_id == log.discord_user_id)\
+                    .where(Log.status == LogStatus.REVIEW_ACCEPTED).where(Log.tier == log.tier)\
+                    .where(Log.role == log.role)
+                if log.tier == 2 and (await session.execute(stmt)).scalar() + 1 >= 2:
+                    roles.append(interaction.guild.get_role(int((await session.get(Config, ConfigKey.T2_ROLE_ID.name)).value)))
+                    old_role = interaction.guild.get_role(int((await session.get(Config, ConfigKey.T1_ROLE_ID.name)).value))
+                elif log.tier == 3 and (await session.execute(stmt)).scalar() + 1 >= 3:
+                    roles.append(interaction.guild.get_role(int((await session.get(Config, ConfigKey.T3_ROLE_ID.name)).value)))
+                    roles.append(interaction.guild.get_role(int((await session.get(Config, log.role.get_config_key().name)).value)))
+                    old_role = interaction.guild.get_role(int((await session.get(Config, ConfigKey.T2_ROLE_ID.name)).value))
+
+                if roles:
+                    for role in roles:
+                        await member.add_roles(role)
+                        role_assignment_text += f"\nYou have been assigned {role.name} {get_random_success_emote()}"
+                    await member.remove_roles(old_role)
                 emote = get_random_success_emote()
-            await ta_channel.send(content=f"{member.mention} {self.feedback} {emote}")
+            await ta_channel.send(content=f"{member.mention} {self.feedback} {emote}\n{role_assignment_text}")
 
             # Update application
             log.status = self.status
             log.reviewer = interaction.user.id
-
-            # TODO: Add role
 
             # Cleanup
             await (await rr_channel.fetch_message(log.review_message_id)).delete()
