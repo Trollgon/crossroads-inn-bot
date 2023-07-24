@@ -3,7 +3,6 @@ import aiohttp
 import discord
 from discord import Interaction, Embed
 from discord.ext import commands
-from sqlalchemy import select
 from api import API
 from database import Session
 from helpers.custom_embed import CustomEmbed

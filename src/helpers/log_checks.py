@@ -1,9 +1,6 @@
 from typing import Dict
-
 from sqlalchemy import select
-
 from database import Session
-from models.boss import Boss
 from models.config import Config
 from models.enums.config_key import ConfigKey
 from models.enums.log_status import LogStatus

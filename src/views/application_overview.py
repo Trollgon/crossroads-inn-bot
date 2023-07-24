@@ -2,7 +2,7 @@ import os
 from discord import Interaction
 from sqlalchemy import select
 from database import Session
-from helpers.embeds import generate_error_embed
+from helpers.embeds import generate_error_embed, get_progress_embed
 from helpers.logging import log_to_channel
 from models.application import Application
 from models.config import Config
@@ -87,6 +87,11 @@ class ApplicationOverview(discord.ui.View):
                 return
 
         await interaction.response.send_modal(SubmitLogModal(self.bot, 3, role))
+
+    @discord.ui.button(label="View Progress", style=discord.ButtonStyle.green, custom_id="persistent_view:view_progress", row=2)
+    async def view_progress(self, interaction: discord.Interaction, button: discord.ui.Button):
+        async with Session.begin() as session:
+            await interaction.response.send_message(embed=await get_progress_embed(session, interaction.user), ephemeral=True)
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
         # Send message to user and log error
