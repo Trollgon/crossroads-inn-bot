@@ -1,8 +1,8 @@
+from typing import Dict
 import discord
 from discord import Embed
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from exceptions import APIException
 from models.enums.log_status import LogStatus
 from models.enums.role import Role
@@ -64,4 +64,20 @@ async def get_progress_embed(session: AsyncSession, discord_user: discord.User) 
             accepted += 1 if log.status == LogStatus.REVIEW_ACCEPTED else 0
         embed.add_field(name=f"Tier 3: {role.value}", value=f"Progress: {accepted}/3\n" + value, inline=False)
 
+    return embed
+
+def get_log_embed(log_url: str, log_json: Dict, discord_user: discord.User, account_name: str, role: Role, tier: int) -> Embed:
+    embed = Embed(title=f"{log_json['fightName']}", colour=discord.Color.blurple(), url=log_url)
+    embed.set_author(name=discord_user.display_name, icon_url=discord_user.avatar)
+    embed.set_thumbnail(url=log_json["fightIcon"])
+    embed.set_footer(text=f"eiEncounterID: {log_json['eiEncounterID']} | gW2Build: {log_json['gW2Build']}\n")
+    for player in log_json["players"]:
+        if player['account'] == account_name:
+            profession = player['profession']
+            break
+    else:
+        raise Exception(f"Could not find account {account_name} in log")
+
+    embed.description = f"**Tier:** {tier}\n**Role:** {role.value}\n\n**Account:** {account_name}\n" \
+                        f"**Profession:** {profession}\n**Duration:** {log_json['duration']}"
     return embed

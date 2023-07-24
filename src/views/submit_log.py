@@ -6,7 +6,7 @@ from discord.ext import commands
 from api import API
 from database import Session
 from helpers.custom_embed import CustomEmbed
-from helpers.embeds import generate_error_embed
+from helpers.embeds import generate_error_embed, get_log_embed
 from helpers.log_checks import check_log
 from helpers.logging import log_to_channel
 from models.enums.log_status import LogStatus
@@ -104,12 +104,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
                 return
 
             # Create review message
-            review_embed = Embed(title="Log Review",
-                          description=f"{interaction.user} submitted a log to apply for tier {log.tier}.\n\n"
-                                      f"[{log.fight_name}]({log.log_url})")
-            fbc.to_embed(review_embed)
-
-            # TODO: add automatic log check feedback
+            review_embed = get_log_embed(str(self.log_url), log_json, interaction.user, await api.get_account_name(), self.role, self.tier)
 
             message = await self.bot.get_channel(int(os.getenv("RR_CHANNEL_ID")))\
                 .send(embed=review_embed, view=LogReviewView(self.bot, log.id))
