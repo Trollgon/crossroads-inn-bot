@@ -6,6 +6,7 @@ from models.base import Base
 from models.boss import Boss
 from models.enums.log_status import LogStatus
 from models.enums.pools import BossLogPool
+from models.enums.role import Role
 
 
 class Log(Base):
@@ -14,6 +15,7 @@ class Log(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     discord_user_id: Mapped[int] = mapped_column(BigInteger)
     tier: Mapped[int]
+    role: Mapped[Role]
     log_url: Mapped[str]
     encounter_id: Mapped[int]
     fight_name: Mapped[str]

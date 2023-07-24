@@ -5,7 +5,10 @@ from database import Session
 from helpers.embeds import generate_error_embed
 from helpers.logging import log_to_channel
 from models.application import Application
+from models.config import Config
 from models.enums.application_status import ApplicationStatus
+from models.enums.config_key import ConfigKey
+from models.enums.role import Role
 from models.feedback import *
 from api import API
 from views.application import ApplicationView
@@ -18,7 +21,7 @@ class ApplicationOverview(discord.ui.View):
         super().__init__(timeout=None)
         self.bot = bot
 
-    @discord.ui.button(label='Apply Tier 1', style=discord.ButtonStyle.primary, custom_id='persistent_view:t1')
+    @discord.ui.button(label='Tier 1', style=discord.ButtonStyle.primary, custom_id='persistent_view:t1')
     async def apply_t1(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Check if user already has role
         for role in interaction.user.roles:
@@ -39,23 +42,51 @@ class ApplicationOverview(discord.ui.View):
                 return
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
-    @discord.ui.button(label='Submit Log', style=discord.ButtonStyle.primary, custom_id='persistent_view:submit_log')
-    async def submit_log(self, interaction: discord.Interaction, button: discord.ui.Button):
-        tier = None
-
-        # Check if user already has role
+    @discord.ui.button(label="Tier 2", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t2", row=0)
+    async def submit_log_t2(self, interaction: discord.Interaction, button: discord.ui.Button):
         for role in interaction.user.roles:
             if role.id == int(os.getenv("T1_ROLE_ID")):
-                tier = 2
-            if role.id == int(os.getenv("T2_ROLE_ID")):
-                tier = 3
-            if role.id == int(os.getenv("T3_ROLE_ID")):
-                await interaction.response.send_message(ephemeral=True, content="You are already at Tier 3.")
-                return
-        if not tier:
-            await interaction.response.send_message(ephemeral=True, content="You need to be at least Tier 1 to submit a log.")
+                break
+        else:
+            await interaction.response.send_message(ephemeral=True, content="You need to be tier 1 to apply for tier 2.", row=0)
             return
-        await interaction.response.send_modal(SubmitLogModal(self.bot, 2))
+        await interaction.response.send_modal(SubmitLogModal(self.bot, 2, Role.NONE))
+
+    @discord.ui.button(label="Tier 3: pDPS", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_pdps", row=1)
+    async def submit_log_t3_pdps(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.submit_log_t3(interaction, Role.POWER_DPS)
+
+    @discord.ui.button(label="Tier 3: cDPS", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_cdps", row=1)
+    async def submit_log_t3_cdps(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.submit_log_t3(interaction, Role.CONDITION_DPS)
+
+    @discord.ui.button(label="Tier 3: Boon DPS", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_bdps", row=1)
+    async def submit_log_t3_bdps(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.submit_log_t3(interaction, Role.BOON_DPS)
+
+    @discord.ui.button(label="Tier 3: Heal", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_heal", row=1)
+    async def submit_log_t3_heal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.submit_log_t3(interaction, Role.HEAL)
+
+    async def submit_log_t3(self, interaction: discord.Interaction,role: Role):
+        async with Session.begin() as session:
+            config = await Config.to_dict(session)
+
+        # Check if user has the correct tier
+        for user_role in interaction.user.roles:
+            if user_role.id == int(config[ConfigKey.T2_ROLE_ID]) or user_role.id == int(config[ConfigKey.T3_ROLE_ID]):
+                break
+        else:
+            await interaction.response.send_message(ephemeral=True, content="You need to be at least tier 2 to apply for tier 3.")
+            return
+
+        # Check if user already has the role
+        for user_role in interaction.user.roles:
+            if user_role.id == int(config[role.get_config_key()]):
+                await interaction.response.send_message(ephemeral=True, content=f"You already have the tier 3 {role.value} role.")
+                return
+
+        await interaction.response.send_modal(SubmitLogModal(self.bot, 3, role))
 
     async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item) -> None:
         # Send message to user and log error

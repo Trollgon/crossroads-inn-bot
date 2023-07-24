@@ -11,6 +11,7 @@ from helpers.embeds import generate_error_embed
 from helpers.log_checks import check_log
 from helpers.logging import log_to_channel
 from models.enums.log_status import LogStatus
+from models.enums.role import Role
 from models.feedback import FeedbackLevel
 import re
 from models.log import Log
@@ -21,10 +22,11 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
     api_key: str = discord.ui.TextInput(label="API Key")
     log_url: str = discord.ui.TextInput(label="Log", min_length=40, max_length=60)
 
-    def __init__(self, bot: commands.Bot, tier: int):
+    def __init__(self, bot: commands.Bot, tier: int, role: Role):
         super().__init__()
         self.bot = bot
         self.tier = tier
+        self.role = role
 
     async def on_submit(self, interaction: Interaction) -> None:
         self.api_key = "F1E760E8-6BFD-FA43-AFD2-C01A91FF39182A8DED37-4171-418C-A02D-CAE192B07D47"
@@ -81,6 +83,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
         log = Log()
         log.discord_user_id = interaction.user.id
         log.tier = self.tier
+        log.role = self.role
         log.encounter_id = log_json["eiEncounterID"]
         log.fight_name = log_json["fightName"]
         log.is_cm = log_json["isCM"]
