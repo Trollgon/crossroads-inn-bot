@@ -19,6 +19,8 @@ class Config(Base):
     @staticmethod
     async def init(session: AsyncSession):
         session.add(Config(ConfigKey.MIN_GW2_BUILD, "147894"))
+        session.add(Config(ConfigKey.MAX_SQUAD_DOWNS, "9"))
+        session.add(Config(ConfigKey.MAX_SQUAD_DEATHS, "2"))
 
 
     @staticmethod

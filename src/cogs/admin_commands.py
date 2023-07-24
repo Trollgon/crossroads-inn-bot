@@ -283,7 +283,8 @@ class AdminCommands(commands.Cog):
             config = await Config.all(session)
             msg = ""
             for c in config:
-                msg += f"**{c.key.value} ({c.key.name}):** {c.value}\n"
+                config_key = ConfigKey[c.key]
+                msg += f"**{config_key.value} ({config_key.name}):** {c.value}\n"
 
         await interaction.response.send_message(msg, ephemeral=True)
 
@@ -304,7 +305,7 @@ class AdminCommands(commands.Cog):
     @config.command(name="set", description="Set a config value")
     async def config_set(self, interaction: Interaction, key: ConfigKey, value: str):
         async with Session.begin() as session:
-            config = await session.get(Config, key)
+            config = await session.get(Config, key.name)
             if not config:
                 config = Config(key=key, value=value)
                 session.add(config)
