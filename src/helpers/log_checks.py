@@ -31,10 +31,15 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
         fbg_valid.add(Feedback(f"Log is from before the latest major balance patch.", FeedbackLevel.ERROR))
 
     async with Session.begin() as session:
+        # Checkm if this exact log was already submitted
+        stmt = select(Log).where(Log.log_url == log_url).where(Log.discord_user_id == discord_user_id)
+        if (await session.execute(stmt)).scalar():
+            fbg_valid.add(Feedback(f"You already submitted this log.", FeedbackLevel.ERROR))
+
         # Check if a log for this boss was already submitted
         stmt = select(Log).where(Log.discord_user_id == discord_user_id) \
             .where(Log.status != LogStatus.DENIED).where(Log.status != LogStatus.REVIEW_DENIED) \
-            .where(Log.encounter_id == log_json["eiEncounterID"])
+            .where(Log.encounter_id == log_json["eiEncounterID"]).where(Log.tier == tier).where(Log.role == log.role)
         if (await session.execute(stmt)).scalar():
             fbg_valid.add(Feedback(f"You already submitted a log for this boss.", FeedbackLevel.ERROR))
 
