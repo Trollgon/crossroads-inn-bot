@@ -21,7 +21,20 @@ class Config(Base):
         session.add(Config(ConfigKey.MIN_GW2_BUILD, "147894"))
         session.add(Config(ConfigKey.MAX_SQUAD_DOWNS, "9"))
         session.add(Config(ConfigKey.MAX_SQUAD_DEATHS, "2"))
+        session.add(Config(ConfigKey.MAX_PLAYER_DOWNS, "2"))
 
+        session.add(Config(ConfigKey.LOG_CHANNEL_ID, "1079378660437528576"))
+        session.add(Config(ConfigKey.RR_CHANNEL_ID, "1088082355866058802"))
+        session.add(Config(ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID, "1088074442179104818"))
+
+        session.add(Config(ConfigKey.T0_ROLE_ID, "1088864141340594217"))
+        session.add(Config(ConfigKey.T1_ROLE_ID, "1072652111709491200"))
+        session.add(Config(ConfigKey.T2_ROLE_ID, "1079888828514447410"))
+        session.add(Config(ConfigKey.T3_ROLE_ID, "1079888894025269258"))
+        session.add(Config(ConfigKey.POWER_DPS_ROLE_ID, "1133150361868316682"))
+        session.add(Config(ConfigKey.CONDITION_DPS_ROLE_ID, "1133159967994691645"))
+        session.add(Config(ConfigKey.HEAL_ROLE_ID, "1133160011586093167"))
+        session.add(Config(ConfigKey.BOON_DPS_ROLE_ID, "1133159862604406804"))
 
     @staticmethod
     async def all(session: AsyncSession):
@@ -31,3 +44,7 @@ class Config(Base):
     async def to_dict(session: AsyncSession):
         configs = await Config.all(session)
         return {ConfigKey[config.key]: config.value for config in configs}
+
+    @staticmethod
+    async def get_value(session: AsyncSession, key: ConfigKey):
+        return (await session.execute(select(Config).where(Config.key == key.name))).scalar().value

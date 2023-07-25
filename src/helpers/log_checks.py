@@ -90,8 +90,11 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
     is_emboldened = False
     for player in log_json["players"]:
         if player["account"] == account_name:
-            if player["defenses"][0]["deadCount"] > 0 > 0:
+            if player["defenses"][0]["deadCount"] > 0:
                 fbg_general.add(Feedback(f"You've died. You must be alive at the end of the fight.", FeedbackLevel.ERROR))
+
+            if player["defenses"][0]["downCount"] > int(config[ConfigKey.MAX_PLAYER_DOWNS]):
+                fbg_general.add(Feedback(f"You have downed more than {config[ConfigKey.MAX_PLAYER_DOWNS]} times. ({player['defenses'][0]['downCount']})", FeedbackLevel.ERROR))
 
         squad_downs += player["defenses"][0]["downCount"]
         squad_deaths += player["defenses"][0]["deadCount"]

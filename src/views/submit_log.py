@@ -9,6 +9,8 @@ from helpers.custom_embed import CustomEmbed
 from helpers.embeds import generate_error_embed, get_log_embed
 from helpers.log_checks import check_log
 from helpers.logging import log_to_channel
+from models.config import Config
+from models.enums.config_key import ConfigKey
 from models.enums.log_status import LogStatus
 from models.enums.role import Role
 from models.feedback import FeedbackLevel
@@ -106,7 +108,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
             # Create review message
             review_embed = get_log_embed(str(self.log_url), log_json, interaction.user, await api.get_account_name(), self.role, self.tier)
 
-            message = await self.bot.get_channel(int(os.getenv("RR_CHANNEL_ID")))\
+            message = await self.bot.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))\
                 .send(embed=review_embed, view=LogReviewView(self.bot, log.id))
             log.review_message_id = message.id
             session.add(log)

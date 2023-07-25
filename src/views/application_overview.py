@@ -23,14 +23,9 @@ class ApplicationOverview(discord.ui.View):
 
     @discord.ui.button(label='Tier 1', style=discord.ButtonStyle.primary, custom_id='persistent_view:t1')
     async def apply_t1(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if user already has role
-        for role in interaction.user.roles:
-            if role.id in [int(os.getenv("T1_ROLE_ID")), int(os.getenv("T2_ROLE_ID")), int(os.getenv("T3_ROLE_ID"))]:
-                await interaction.response.send_message(ephemeral=True, content="You are already Tier 1 or above.")
-                return
         # Check if user already has an open application
         async with Session.begin() as session:
-            stmt = select(Application).where(Application.discord_user_id == interaction.user.id)\
+            stmt = select(Application).where(Application.discord_user_id == interaction.user.id) \
                 .where(Application.status == ApplicationStatus.WAITING_FOR_REVIEW)
             application = (await session.execute(stmt)).scalar()
             if application:
@@ -40,12 +35,21 @@ class ApplicationOverview(discord.ui.View):
                             "If you want you can close your application by clicking the button below.",
                     view=CloseApplicationView(self.bot, application.id))
                 return
+            config = await Config.to_dict(session)
+
+        # Check if user already has role
+        for role in interaction.user.roles:
+            if role.id in [int(config[ConfigKey.T1_ROLE_ID]), int(config[ConfigKey.T2_ROLE_ID]), int(config[ConfigKey.T3_ROLE_ID])]:
+                await interaction.response.send_message(ephemeral=True, content="You are already Tier 1 or above.")
+                return
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
     @discord.ui.button(label="Tier 2", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t2", row=0)
     async def submit_log_t2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        async with Session.begin() as session:
+            t1_role_id = int((await Config.get_value(session, ConfigKey.T1_ROLE_ID)))
         for role in interaction.user.roles:
-            if role.id == int(os.getenv("T1_ROLE_ID")):
+            if role.id == t1_role_id:
                 break
         else:
             await interaction.response.send_message(ephemeral=True, content="You need to be tier 1 to apply for tier 2.", row=0)

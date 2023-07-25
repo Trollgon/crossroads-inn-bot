@@ -5,7 +5,9 @@ from database import Session
 from helpers.emotes import get_random_success_emote
 from models.application import Application
 from models.build import Build
+from models.config import Config
 from models.enums.application_status import ApplicationStatus
+from models.enums.config_key import ConfigKey
 from models.enums.profession import Profession
 from models.feedback import *
 from discord.ext import commands
@@ -81,6 +83,7 @@ class ApplicationView(discord.ui.View):
         await interaction.response.defer()
         async with Session() as session:
             build = await Build.find(session, id=int(self.build_select.values[0]))
+            config = await Config.to_dict(session)
         player_equipment = await self.api.get_equipment(self.character, int(self.equipment_tabs_select.values[0]))
 
         embed = Embed(title="Gearcheck Feedback",
@@ -112,11 +115,11 @@ class ApplicationView(discord.ui.View):
             case FeedbackLevel.SUCCESS:
                 embed.colour = discord.Colour.green()
                 member = interaction.guild.get_member(interaction.user.id)
-                await member.add_roles(interaction.guild.get_role(int(os.getenv("T1_ROLE_ID"))))
-                await member.remove_roles(interaction.guild.get_role(int(os.getenv("T0_ROLE_ID"))))
+                await member.add_roles(interaction.guild.get_role(int(config[ConfigKey.T1_ROLE_ID])))
+                await member.remove_roles(interaction.guild.get_role(int(config[ConfigKey.T0_ROLE_ID])))
                 embed.add_field(name=f"{FeedbackLevel.SUCCESS.emoji} Success! You are now Tier 1.", value="")
                 await self.original_message.edit(embed=embed, view=None)
-                ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
+                ta_channel = interaction.guild.get_channel(int(config[ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID]))
                 await ta_channel.send(content=f"{member.mention} Congrats on tier1 {get_random_success_emote()}")
 
             case FeedbackLevel.WARNING:
@@ -164,7 +167,7 @@ async def request_equipment_review(interaction: Interaction, application: Applic
         for fb in feedback.feedback:
             if fb.level > FeedbackLevel.SUCCESS:
                 embed = fb.to_embed(embed)
-        message = await bot.get_channel(int(os.getenv("RR_CHANNEL_ID"))).send(embed=embed, view=ReviewView(bot, application.id))
+        message = await bot.get_channel(int((await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))).send(embed=embed, view=ReviewView(bot, application.id))
         application.review_message_id = message.id
         application.status = ApplicationStatus.WAITING_FOR_REVIEW
         session.add(application)

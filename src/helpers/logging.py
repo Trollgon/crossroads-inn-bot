@@ -3,7 +3,10 @@ import os
 import discord.ext.commands
 from discord import Embed
 
+from database import Session
 from models.build import Build
+from models.config import Config
+from models.enums.config_key import ConfigKey
 from models.equipment import Equipment
 from models.feedback import FeedbackCollection
 
@@ -23,4 +26,6 @@ async def log_gear_check(bot: discord.ext.commands.Bot, interaction: discord.Int
 
 async def log_to_channel(bot: discord.ext.commands.Bot, embed: Embed) -> None:
     embed.timestamp = datetime.datetime.now()
-    await bot.get_channel(int(os.getenv("LOG_CHANNEL_ID"))).send(embed=embed)
+    async with Session.begin() as session:
+        log_channel_id = int((await Config.get_value(session, ConfigKey.LOG_CHANNEL_ID)))
+        await bot.get_channel(log_channel_id).send(embed=embed)
