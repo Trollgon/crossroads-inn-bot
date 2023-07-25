@@ -96,6 +96,8 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
             if player["defenses"][0]["downCount"] > int(config[ConfigKey.MAX_PLAYER_DOWNS]):
                 fbg_general.add(Feedback(f"You have downed more than {config[ConfigKey.MAX_PLAYER_DOWNS]} times. ({player['defenses'][0]['downCount']})", FeedbackLevel.ERROR))
 
+            check_food(player, fbg_general)
+
         squad_downs += player["defenses"][0]["downCount"]
         squad_deaths += player["defenses"][0]["deadCount"]
 
@@ -118,3 +120,42 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
         fbg_general.add(Feedback(f"We do not allow logs with Emboldened Mode active.", FeedbackLevel.ERROR))
 
     return fbc
+
+def check_food(player_data: Dict, fbg: FeedbackGroup):
+    # no consumables at all
+    if not player_data['consumables']:
+        fbg.add(Feedback("Did not use food and/or utility.", FeedbackLevel.ERROR))
+        return fbg
+
+    consumable_data = player_data['consumables']
+
+    consumable_ids = []
+
+    # get used consumable ids
+    for c in consumable_data:
+        # don't add Reinforced Armour (ID: 9283)
+        if not c['id'] == 9283:
+            consumable_ids.append(c['id'])
+
+    consumables_as_buffs = {}
+
+    # get according buffUptimes
+    for b in player_data['buffUptimes']:
+        if b['id'] in consumable_ids:
+            consumables_as_buffs[b['id']] = b['buffData']
+
+    # Diminished
+    if 46668 in consumables_as_buffs.keys() and consumables_as_buffs[46668][0]['uptime'] >= 25:
+        fbg.add(Feedback("Did not refresh utility.", FeedbackLevel.ERROR))
+    # Malnourished
+    if 46587 in consumables_as_buffs.keys() and consumables_as_buffs[46587][0]['uptime'] >= 25:
+        fbg.add(Feedback("Did not refresh food.", FeedbackLevel.ERROR))
+
+    # check if started fight with food and consumables or had consumable activity in the first ten seconds
+    tmp_consumable_counter = 0
+    for c in consumable_data:
+        if c['time'] < 10000 and c['id'] != 46587 and c['id'] != 46668:
+            tmp_consumable_counter += 1
+
+    if tmp_consumable_counter < 2:
+        fbg.add(Feedback("Did not start the fight with food and/or utility.", FeedbackLevel.ERROR))
