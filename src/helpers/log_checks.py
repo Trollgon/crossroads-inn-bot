@@ -106,10 +106,10 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
                 is_emboldened = True
 
     if squad_downs > int(config[ConfigKey.MAX_SQUAD_DOWNS]):
-        fbg_general.add(Feedback(f"Your squad has a lot of downs. ({squad_downs})", FeedbackLevel.ERROR))
+        fbg_general.add(Feedback(f"Your squad downed more than {config[ConfigKey.MAX_SQUAD_DOWNS]} times. ({squad_downs})", FeedbackLevel.ERROR))
 
     if squad_deaths > int(config[ConfigKey.MAX_SQUAD_DEATHS]):
-        fbg_general.add(Feedback(f"Your squad has a lot of deaths. ({squad_deaths})", FeedbackLevel.ERROR))
+        fbg_general.add(Feedback(f"Your squad died more than {config[ConfigKey.MAX_SQUAD_DEATHS]}. ({squad_deaths})", FeedbackLevel.ERROR))
 
     if found_blood_magic:
         fbg_general.add(Feedback(f"We do not allow logs with a Blood Magic Necromancer present.", FeedbackLevel.ERROR))
