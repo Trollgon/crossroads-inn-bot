@@ -119,6 +119,8 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
     if is_emboldened:
         fbg_general.add(Feedback(f"We do not allow logs with Emboldened Mode active.", FeedbackLevel.ERROR))
 
+    check_healers(log_json, fbg_general)
+
     return fbc
 
 def check_food(player_data: Dict, fbg: FeedbackGroup):
@@ -159,3 +161,23 @@ def check_food(player_data: Dict, fbg: FeedbackGroup):
 
     if tmp_consumable_counter < 2:
         fbg.add(Feedback("Did not start the fight with food and/or utility.", FeedbackLevel.ERROR))
+
+def check_healers(log_json: Dict, fbg: FeedbackGroup) -> None:
+    amount_of_healers = 0
+
+    for player in log_json["players"]:
+        if player["healing"] == 10:
+            amount_of_healers += 1
+            if player["profession"] == "Chronomancer":
+                # check for heal signet
+                for buff in player["buffUptimes"]:
+                    # Ether Signet -> not a healer
+                    if buff["id"] == 21751:
+                        amount_of_healers -= 1
+
+    # HK counts as healer at deimos
+    if int(log_json["eiEncounterID"]) == 132100 and amount_of_healers <= 3:
+        return
+    elif amount_of_healers <= 2:
+        return
+    fbg.add(Feedback("Potentially too many healers.", FeedbackLevel.WARNING))
