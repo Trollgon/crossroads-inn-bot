@@ -6,7 +6,9 @@ from discord.ui import View, Modal
 from database import Session
 from helpers.emotes import get_random_success_emote
 from models.application import Application
+from models.config import Config
 from models.enums.application_status import ApplicationStatus
+from models.enums.config_key import ConfigKey
 from views.callback_button import CallbackButton
 from helpers.logging import log_to_channel
 
@@ -88,12 +90,12 @@ class ReviewModal(Modal, title="Tier 1 Application"):
 
             # Add role and send feedback message
             emote = ""
-            ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
-            rr_channel = interaction.guild.get_channel(int(os.getenv("RR_CHANNEL_ID")))
+            ta_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID)))
+            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))
             member = interaction.guild.get_member(application.discord_user_id)
             if self.status == ApplicationStatus.REVIEW_ACCEPTED:
-                role = interaction.guild.get_role(int(os.getenv("T1_ROLE_ID")))
-                old_role = interaction.guild.get_role(int(os.getenv("T0_ROLE_ID")))
+                role = interaction.guild.get_role(int(await Config.get_value(session, ConfigKey.T1_ROLE_ID)))
+                old_role = interaction.guild.get_role(int(await Config.get_value(session, ConfigKey.T0_ROLE_ID)))
                 emote = get_random_success_emote()
                 await member.add_roles(role)
                 await member.remove_roles(old_role)

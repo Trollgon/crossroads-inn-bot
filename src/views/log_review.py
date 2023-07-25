@@ -65,8 +65,8 @@ class LogReviewModal(Modal, title="Log review"):
             # Send feedback message
             emote = ""
             role_assignment_text = ""
-            ta_channel = interaction.guild.get_channel(int(os.getenv("TIER_ASSIGNMENT_CHANNEL_ID")))
-            rr_channel = interaction.guild.get_channel(int(os.getenv("RR_CHANNEL_ID")))
+            ta_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID)))
+            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))
             member = interaction.guild.get_member(log.discord_user_id)
             if self.status == LogStatus.REVIEW_ACCEPTED:
                 roles = []
@@ -97,7 +97,7 @@ class LogReviewModal(Modal, title="Log review"):
             await (await rr_channel.fetch_message(log.review_message_id)).delete()
             log.review_message_id = None
         self.parent_view.stop()
-        await interaction.followup.send(content=f"The application has been {self.status}", ephemeral=True)
+        await interaction.followup.send(content=f"The log has been {self.status}", ephemeral=True)
 
         # Log
         embed = Embed(title=f"Log review: {self.status}", colour=self.status.colour)
