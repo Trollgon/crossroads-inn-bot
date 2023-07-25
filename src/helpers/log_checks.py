@@ -176,8 +176,6 @@ def check_healers(log_json: Dict, fbg: FeedbackGroup) -> None:
                         amount_of_healers -= 1
 
     # HK counts as healer at deimos
-    if int(log_json["eiEncounterID"]) == 132100 and amount_of_healers <= 3:
-        return
-    elif amount_of_healers <= 2:
+    if (int(log_json["eiEncounterID"]) == 132100 and amount_of_healers <= 3) or amount_of_healers <= 2:
         return
     fbg.add(Feedback("Potentially too many healers.", FeedbackLevel.WARNING))

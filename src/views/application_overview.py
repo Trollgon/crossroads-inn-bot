@@ -1,4 +1,3 @@
-import os
 from discord import Interaction
 from sqlalchemy import select
 from database import Session

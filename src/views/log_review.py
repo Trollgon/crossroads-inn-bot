@@ -1,4 +1,3 @@
-import os
 import discord
 from discord import Interaction, ButtonStyle, Embed
 from discord.ext import commands

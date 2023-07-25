@@ -1,7 +1,7 @@
 import os
 import aiohttp
 import discord
-from discord import Interaction, Embed
+from discord import Interaction
 from discord.ext import commands
 from api import API
 from database import Session

@@ -1,5 +1,4 @@
 import datetime
-import os
 import discord.ext.commands
 from discord import Embed
 
