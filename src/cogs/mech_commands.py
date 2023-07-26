@@ -1,6 +1,6 @@
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from database import Session
 from helpers.custom_embed import CustomEmbed
 from helpers.embeds import split_embed
@@ -28,7 +28,8 @@ class MechCommands(commands.Cog):
                         value="- `/mech list [encounter_id]`: Show a list of all configured mechanics\n"
                               "- `/mech add: <encounter_id> <name> <max_amount> <mode>`: Add a mechanic check\n"
                               "- `/mech delete <id>`: Delete a mechanic check\n"
-                              "- `/mech edit <id> [encounter_id] [name] [max_amount] [mode]`: Edit a mechanic check\n",
+                              "- `/mech edit <id> [encounter_id] [name] [max_amount] [mode]`: Edit a mechanic check\n"
+                              "- `/mech init`: Drop the table and initialize it with default mechanic checks\n",
                         inline=False)
         embed.add_field(name="Arguments",
                         value="- `encounter_id`: The encounter id of the boss. See `/boss list`\n"
@@ -59,12 +60,12 @@ class MechCommands(commands.Cog):
             for mech in mechs:
                 if mech.encounter_id != encounter_id:
                     if value != "":
-                        split_embed(embed, f"{boss.boss_name} (encounter_id: {boss.encounter_id})", value, inline=False)
+                        split_embed(embed, f"{boss.boss_name} ({boss.encounter_id})", value, inline=True)
                         value = ""
                     boss = (await session.get(Boss, (mech.encounter_id, False)))
                     encounter_id = mech.encounter_id
                 value += f"[{mech.id}] {mech.name}: {mech.max_amount} ({mech.mode})\n"
-            split_embed(embed, f"{boss.boss_name} (encounter_id: {boss.encounter_id})", value, inline=False)
+            split_embed(embed, f"{boss.boss_name} ({boss.encounter_id})", value, inline=True)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.guild_only
@@ -147,3 +148,13 @@ class MechCommands(commands.Cog):
             await session.flush()
             await session.refresh(mech)
             await interaction.response.send_message(f"Mechanic check was edited:\n{str(mech)}", ephemeral=True)
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @mech.command(name="init", description="Drop the table and initialize it with default mechanic checks.")
+    async def mech_init(self, interaction: Interaction):
+        async with Session.begin() as session:
+            await session.execute(delete(Mech))
+            Mech.init(session)
+        await interaction.response.send_message(f"Mechanic checks were initialized.", ephemeral=True)
