@@ -37,6 +37,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
 
         # Create embed
         embed = CustomEmbed(self.bot, title="Log Feedback", color=FeedbackLevel.ERROR.colour)
+        embed.description = f"**User:** {interaction.user}\n**Log:** {self.log_url}\n**Tier:** {self.tier}\n**Role:** {self.role.value}"
 
         # Check if log url is valid
         pattern = re.compile("https:\/\/dps\.report\/[a-zA-Z\-0-9\_]+")
@@ -103,6 +104,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
 
             if log.status == LogStatus.DENIED:
                 await interaction.followup.send(embed=embed, ephemeral=True)
+                await log_to_channel(self.bot, embed)
                 return
 
             # Create review message

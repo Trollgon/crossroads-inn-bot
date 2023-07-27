@@ -113,7 +113,7 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
         fbg_general.add(Feedback(f"Your squad downed more than {config[ConfigKey.MAX_SQUAD_DOWNS]} times. ({squad_downs})", FeedbackLevel.ERROR))
 
     if squad_deaths > int(config[ConfigKey.MAX_SQUAD_DEATHS]):
-        fbg_general.add(Feedback(f"Your squad died more than {config[ConfigKey.MAX_SQUAD_DEATHS]}. ({squad_deaths})", FeedbackLevel.ERROR))
+        fbg_general.add(Feedback(f"Your squad died more than {config[ConfigKey.MAX_SQUAD_DEATHS]} times. ({squad_deaths})", FeedbackLevel.ERROR))
 
     if found_blood_magic:
         fbg_general.add(Feedback(f"We do not allow logs with a Blood Magic Necromancer present.", FeedbackLevel.ERROR))
@@ -212,7 +212,7 @@ async def check_mechanics(log_json: Dict, account_name: str, fbg_mech: FeedbackG
             full_name = None
             for mechanic in log_json["mechanics"]:
                 if mechanic["name"] == mech.name:
-                    full_name = mechanic["fullName"]
+                    full_name = mechanic["fullName"] if "fullName" in mechanic else mech.name
                     for mechanic_data in mechanic["mechanicsData"]:
                         if mech.mode == MechMode.PLAYER and mechanic_data["actor"] == character_name:
                             amount += 1
@@ -233,4 +233,4 @@ async def check_mechanics(log_json: Dict, account_name: str, fbg_mech: FeedbackG
 
             if amount > mech.max_amount:
                 fbg_mech.add(Feedback(f"{'You' if mech.mode == MechMode.PLAYER else 'Your squad'} failed {full_name}"
-                                      f" {amount} times ({mech.max_amount} allowed)", FeedbackLevel.ERROR))
+                                      f" {amount} time{'s' if amount > 1 else ''}. ({mech.max_amount} allowed)", FeedbackLevel.ERROR))
