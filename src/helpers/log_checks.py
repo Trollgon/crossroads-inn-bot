@@ -4,9 +4,11 @@ from database import Session
 from models.config import Config
 from models.enums.config_key import ConfigKey
 from models.enums.log_status import LogStatus
+from models.enums.mech_mode import MechMode
 from models.enums.pools import BossLogPool
 from models.feedback import FeedbackGroup, FeedbackLevel, Feedback, FeedbackCollection
 from models.log import Log
+from models.mech import Mech
 
 
 async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_id: int, log_url: str, log: Log) -> FeedbackCollection:
@@ -121,6 +123,11 @@ async def check_log(log_json: Dict, account_name: str, tier: int, discord_user_i
 
     check_healers(log_json, fbg_general)
 
+    # Check mechanics
+    fbg_mech = FeedbackGroup(message=f"Checking mechanics")
+    fbc.add(fbg_mech)
+    await check_mechanics(log_json, account_name, fbg_mech)
+
     return fbc
 
 def check_food(player_data: Dict, fbg: FeedbackGroup):
@@ -179,3 +186,51 @@ def check_healers(log_json: Dict, fbg: FeedbackGroup) -> None:
     if (int(log_json["eiEncounterID"]) == 132100 and amount_of_healers <= 3) or amount_of_healers <= 2:
         return
     fbg.add(Feedback("Potentially too many healers.", FeedbackLevel.WARNING))
+
+
+async def check_mechanics(log_json: Dict, account_name: str, fbg_mech: FeedbackGroup, mech_id: int = None, debug: bool = False) -> None:
+    stmt = select(Mech).where(Mech.encounter_id == log_json["eiEncounterID"])
+    if mech_id:
+        stmt = stmt.where(Mech.id == mech_id)
+
+    # Get character name
+    character_name = None
+    for player in log_json["players"]:
+        if account_name == player["account"]:
+            character_name = player["name"]
+            break
+
+    if not character_name:
+        raise Exception(f"Could not find character name for account {account_name}")
+
+    # Check mechanics
+    async with Session.begin() as session:
+        mechs = (await session.execute(stmt)).scalars().all()
+        for mech in mechs:
+            # Get amount of mechanic
+            amount = 0
+            full_name = None
+            for mechanic in log_json["mechanics"]:
+                if mechanic["name"] == mech.name:
+                    full_name = mechanic["fullName"]
+                    for mechanic_data in mechanic["mechanicsData"]:
+                        if mech.mode == MechMode.PLAYER and mechanic_data["actor"] == character_name:
+                            amount += 1
+                        elif mech.mode == MechMode.SQUAD:
+                            amount += 1
+
+            if debug and full_name:
+                fbg_mech.add(Feedback(f"Found {amount} {full_name} ({mech.name}) ({mech.max_amount} allowed)",
+                                      FeedbackLevel.ERROR if amount > mech.max_amount else FeedbackLevel.SUCCESS))
+                continue
+            if debug and not full_name:
+                fbg_mech.add(Feedback(f"Could not find {mech.name} in log. "
+                                      f"Either the mech name is wrong or no one got hit by the mechanic. "
+                                      f"You can manually check the log to verify if the check is working correctly.",
+                                      FeedbackLevel.WARNING))
+                continue
+
+
+            if amount > mech.max_amount:
+                fbg_mech.add(Feedback(f"{'You' if mech.mode == MechMode.PLAYER else 'Your squad'} failed {full_name}"
+                                      f" {amount} times ({mech.max_amount} allowed)", FeedbackLevel.ERROR))

@@ -1,11 +1,15 @@
+import re
+import aiohttp
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 from sqlalchemy import select, delete
 from database import Session
 from helpers.custom_embed import CustomEmbed
 from helpers.embeds import split_embed
+from helpers.log_checks import check_mechanics
 from models.boss import Boss
 from models.enums.mech_mode import MechMode
+from models.feedback import FeedbackGroup
 from models.mech import Mech
 
 
@@ -158,3 +162,53 @@ class MechCommands(commands.Cog):
             await session.execute(delete(Mech))
             Mech.init(session)
         await interaction.response.send_message(f"Mechanic checks were initialized.", ephemeral=True)
+
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_roles=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @mech.command(name="test", description="Test a mechanic check.")
+    async def mech_test(self, interaction: Interaction, log_url: str, account_name: str, mech_id: int = None):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
+        # Check if log url is valid
+        pattern = re.compile("https:\/\/dps\.report\/[a-zA-Z\-0-9\_]+")
+        if not pattern.match(log_url):
+            await interaction.followup.send(f"Invalid log url.", ephemeral=True)
+            return
+
+        # Get json data from dps.report
+        error = ""
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://dps.report/getJson?permalink=" + log_url) as r:
+                if r.status == 200:
+                    try:
+                        log_json = await r.json()
+                    except Exception as e:
+                        error = f"{log_url}\n{e}"
+                else:
+                    error = f"{log_url}\n{r.status}: {await r.text()}"
+
+        if error:
+            await interaction.followup.send(f"Error while parsing log:\n{error}", ephemeral=True)
+            return
+
+        # Check if mech exists for this boss
+        async with Session.begin() as session:
+            stmt = select(Mech).where(Mech.encounter_id == log_json["eiEncounterID"])
+            if not (await session.execute(stmt)).scalars().all():
+                await interaction.followup.send(f"No mechanics are configured for this boss. Use `/mech list` to see all mechanics.", ephemeral=True)
+                return
+
+            # Check if the mech exists
+            if mech_id:
+                mech = (await session.execute(stmt.where(Mech.id == mech_id))).scalar()
+                if not mech:
+                    await interaction.followup.send(f"This mechanic does not exist on this boss. Use `/mech list` to see all mechanics.", ephemeral=True)
+                    return
+
+
+        fbg = FeedbackGroup(message=f"Checking mechanics")
+        await check_mechanics(log_json, account_name, fbg, mech_id, True)
+        embed = fbg.to_embed(CustomEmbed(self.bot, title="Mechanic Test"))
+        await interaction.followup.send(embed=embed, ephemeral=True)
