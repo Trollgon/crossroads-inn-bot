@@ -117,7 +117,7 @@ class CloseApplicationView(discord.ui.View):
             application.status = ApplicationStatus.CLOSED_BY_APPLICANT
 
             # Delete review message
-            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))
+            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.GEAR_REVIEW_CHANNEL_ID)))
             await (await rr_channel.fetch_message(application.review_message_id)).delete()
             application.review_message_id = None
 

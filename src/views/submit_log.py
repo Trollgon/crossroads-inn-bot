@@ -111,7 +111,7 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
             review_embed = get_log_embed(str(self.log_url), log_json, interaction.user, await api.get_account_name(), self.role, self.tier)
             fbc.to_embed(review_embed)
 
-            message = await self.bot.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))\
+            message = await self.bot.get_channel(int(await Config.get_value(session, ConfigKey.LOG_REVIEW_CHANNEL_ID)))\
                 .send(embed=review_embed, view=LogReviewView(self.bot, log.id))
             log.review_message_id = message.id
             session.add(log)

@@ -90,7 +90,7 @@ class ReviewModal(Modal, title="Tier 1 Application"):
             # Add role and send feedback message
             emote = ""
             ta_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID)))
-            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))
+            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.GEAR_REVIEW_CHANNEL_ID)))
             member = interaction.guild.get_member(application.discord_user_id)
             if self.status == ApplicationStatus.REVIEW_ACCEPTED:
                 role = interaction.guild.get_role(int(await Config.get_value(session, ConfigKey.T1_ROLE_ID)))

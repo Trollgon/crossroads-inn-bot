@@ -12,7 +12,8 @@ class ConfigKey(Enum):
     BOON_DPS_ROLE_ID = "Boon DPS role id"
 
     LOG_CHANNEL_ID = "log channel id"
-    RR_CHANNEL_ID = "roleright channel id"
+    GEAR_REVIEW_CHANNEL_ID = "gear review channel id"
+    LOG_REVIEW_CHANNEL_ID = "log review channel id"
     TIER_ASSIGNMENT_CHANNEL_ID = "tier assignment channel id"
 
     MIN_GW2_BUILD = "Minimum GW2 build version"

@@ -65,7 +65,7 @@ class LogReviewModal(Modal, title="Log review"):
             emote = ""
             role_assignment_text = ""
             ta_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID)))
-            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))
+            rr_channel = interaction.guild.get_channel(int(await Config.get_value(session, ConfigKey.LOG_REVIEW_CHANNEL_ID)))
             member = interaction.guild.get_member(log.discord_user_id)
             if self.status == LogStatus.REVIEW_ACCEPTED:
                 roles = []

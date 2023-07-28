@@ -167,7 +167,7 @@ async def request_equipment_review(interaction: Interaction, application: Applic
         for fb in feedback.feedback:
             if fb.level > FeedbackLevel.SUCCESS:
                 embed = fb.to_embed(embed)
-        message = await bot.get_channel(int((await Config.get_value(session, ConfigKey.RR_CHANNEL_ID)))).send(embed=embed, view=ReviewView(bot, application.id))
+        message = await bot.get_channel(int((await Config.get_value(session, ConfigKey.GEAR_REVIEW_CHANNEL_ID)))).send(embed=embed, view=ReviewView(bot, application.id))
         application.review_message_id = message.id
         application.status = ApplicationStatus.WAITING_FOR_REVIEW
         session.add(application)

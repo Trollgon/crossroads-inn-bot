@@ -24,7 +24,8 @@ class Config(Base):
         session.add(Config(ConfigKey.MAX_PLAYER_DOWNS, "2"))
 
         session.add(Config(ConfigKey.LOG_CHANNEL_ID, "1079378660437528576"))
-        session.add(Config(ConfigKey.RR_CHANNEL_ID, "1088082355866058802"))
+        session.add(Config(ConfigKey.GEAR_REVIEW_CHANNEL_ID, "1088082355866058802"))
+        session.add(Config(ConfigKey.LOG_REVIEW_CHANNEL_ID, "1088082355866058802"))
         session.add(Config(ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID, "1088074442179104818"))
 
         session.add(Config(ConfigKey.T0_ROLE_ID, "1088864141340594217"))
