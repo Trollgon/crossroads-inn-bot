@@ -52,22 +52,31 @@ class AdminCommands(commands.Cog):
                          icon_url=self.bot.user.avatar.url if self.bot.user.avatar else None)
         embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
         embed.add_field(name=" ", value="", inline=False)
-        embed.add_field(name="How to use",
-                        value="1. Press the button below to start the application process\n"
-                              "2. Enter your API key and the name of the character that you want to apply with. "
-                              "__The bot will not store your API key__\n"
+        embed.add_field(name="How to get your API key",
+                        value="1. Open the [API Key Management](https://account.arena.net/applications) and log into your ArenaNet account.\n"
+                              "2. Press `New Key`\n"
+                              "3. Enter a name for the key\n"
+                              "4. Select the `account`, `characters`, `builds` and `progression` permission\n"
+                              "5. Press `Create API Key`\n"
+                              "__The bot will not store your API key__\n",
+                        inline=False)
+        embed.add_field(name=" ", value="", inline=False)
+        embed.add_field(name="How to apply fot Tier 1",
+                        value="1. Press the `Tier 1` button below to start the application process\n"
+                              "2. Enter your API key and the name of the character that you want to apply with.\n"
                               "3. The bot will check your Mastery and how many bosses you have killed\n"
                               "4. Select your equipment template and the build you want to apply for\n"
                               "5. The bot will compare your equipment to the build you selected\n"
                               "6. If your gear is correct the bot will automatically grant you the role\n",
                         inline=False)
         embed.add_field(name=" ", value="", inline=False)
-        embed.add_field(name="How to get your API key",
-                        value="1. Open the [API Key Management](https://account.arena.net/applications) and log into your ArenaNet account.\n"
-                              "2. Press `New Key`\n"
-                              "3. Enter a name for the key\n"
-                              "4. Select the `account`, `characters`, `builds` and `progression` permission\n"
-                              "5. Press `Create API Key`\n",
+        embed.add_field(name="How to apply for Tier 2 and above",
+                        value="1. Press one of the `Tier 2` or role specific `Tier 3` buttons below\n"
+                              "2. Enter your API key and the link to the log that you want to apply with\n"
+                              "3. The bot will do some automatic checks on your log and hand it over to the rolerights\n"
+                              "4. The rolerights will review your log and accept or deny it\n"
+                              "5. Once enough logs are approved you will be automatically granted the role. "
+                              "You can check your progress with the `View Progress` button below\n",
                         inline=False)
         await interaction.channel.send(view=ApplicationOverview(self.bot), embed=embed)
         info_embed.add_field(name="Embed initialized", value="", inline=False)
