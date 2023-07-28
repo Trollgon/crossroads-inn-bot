@@ -73,8 +73,8 @@ class MechCommands(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @mech.command(name="add", description="Add a mechanic check to a boss.")
     async def mech_add(self, interaction: Interaction, encounter_id: int, name: str, max_amount: int, mode: MechMode):
         async with Session.begin() as session:
@@ -103,8 +103,8 @@ class MechCommands(commands.Cog):
 
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @mech.command(name="delete", description="Delete a mechanic check.")
     async def mech_delete(self, interaction: Interaction, mech_id: int):
         async with Session.begin() as session:
@@ -119,8 +119,8 @@ class MechCommands(commands.Cog):
 
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @mech.command(name="edit", description="Edit a mechanic check.")
     async def mech_edit(self, interaction: Interaction, mech_id: int, encounter_id: int = None, name: str = None, max_amount: int = None, mode: MechMode = None):
         async with Session.begin() as session:
@@ -154,8 +154,8 @@ class MechCommands(commands.Cog):
             await interaction.response.send_message(f"Mechanic check was edited:\n{str(mech)}", ephemeral=True)
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @mech.command(name="init", description="Drop the table and initialize it with default mechanic checks.")
     async def mech_init(self, interaction: Interaction):
         async with Session.begin() as session:

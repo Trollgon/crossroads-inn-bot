@@ -100,8 +100,8 @@ class AdminCommands(commands.Cog):
     build = app_commands.Group(name="build", description="Add and remove builds")
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @build.command(name="add", description="Add a build to the database")
     async def build_add(self, interaction: Interaction, snowcrows_url: str):
         if not snowcrows_url.startswith("https://snowcrows.com"):
@@ -119,8 +119,8 @@ class AdminCommands(commands.Cog):
         await interaction.followup.send("Build was added", ephemeral=True)
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @build.command(name="archive", description="Removes the build from the list of allowed builds")
     async def build_archive(self, interaction: Interaction, snowcrows_url: str):
         if not snowcrows_url.startswith("https://snowcrows.com"):
@@ -227,8 +227,8 @@ class AdminCommands(commands.Cog):
         await interaction.response.send_message(msg, ephemeral=True)
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @boss.command(name="init", description="Initialize the bosses in the database")
     async def bosses_init(self, interaction: Interaction):
         async with Session.begin() as session:
@@ -238,8 +238,8 @@ class AdminCommands(commands.Cog):
 
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @boss.command(name="add", description="Add a boss to the database")
     async def bosses_add(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int):
         async with Session.begin() as session:
@@ -257,8 +257,8 @@ class AdminCommands(commands.Cog):
 
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @boss.command(name="delete", description="Delete a boss from the database")
     async def bosses_delete(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool):
         async with Session.begin() as session:
@@ -290,8 +290,8 @@ class AdminCommands(commands.Cog):
 
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @config.command(name="init", description="Initialize the config")
     async def config_init(self, interaction: Interaction):
         async with Session.begin() as session:
@@ -300,8 +300,8 @@ class AdminCommands(commands.Cog):
         await interaction.response.send_message("Config initialized", ephemeral=True)
 
     @app_commands.guild_only
-    @app_commands.default_permissions(manage_roles=True)
-    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @config.command(name="set", description="Set a config value")
     async def config_set(self, interaction: Interaction, key: ConfigKey, value: str):
         async with Session.begin() as session:
