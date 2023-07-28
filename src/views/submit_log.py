@@ -1,4 +1,3 @@
-import os
 import aiohttp
 import discord
 from discord import Interaction
@@ -30,8 +29,6 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
         self.role = role
 
     async def on_submit(self, interaction: Interaction) -> None:
-        self.api_key = "F1E760E8-6BFD-FA43-AFD2-C01A91FF39182A8DED37-4171-418C-A02D-CAE192B07D47"
-
         # Defer to prevent interaction timeout
         await interaction.response.defer(ephemeral=True, thinking=True)
 
