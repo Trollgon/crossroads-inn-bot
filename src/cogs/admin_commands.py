@@ -28,6 +28,15 @@ class AdminCommands(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     @app_commands.command(name="init")
     async def init(self, interaction: Interaction):
+        info_embed = CustomEmbed(self.bot, title="Tier Application initialization")
+
+        # Check if config is set up correctly
+        async with Session.begin() as session:
+            fbg = await Config.check(session)
+            if fbg.level != FeedbackLevel.SUCCESS:
+                await interaction.response.send_message(embed=fbg.to_embed(info_embed), ephemeral=True)
+                return
+
         # Stop old view if it exists
         for view in self.bot.persistent_views:
             if type(view) == ApplicationOverview:
@@ -61,7 +70,8 @@ class AdminCommands(commands.Cog):
                               "5. Press `Create API Key`\n",
                         inline=False)
         await interaction.channel.send(view=ApplicationOverview(self.bot), embed=embed)
-        await interaction.response.send_message("Embed initialized", ephemeral=True)
+        info_embed.add_field(name="Embed initialized", value="", inline=False)
+        await interaction.response.send_message(embed=info_embed, ephemeral=True)
 
     @commands.command("sync")
     @commands.is_owner()

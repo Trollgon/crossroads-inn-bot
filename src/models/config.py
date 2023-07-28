@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from models.base import Base
 from models.enums.config_key import ConfigKey
+from models.feedback import FeedbackGroup, Feedback, FeedbackLevel
 
 
 class Config(Base):
@@ -49,3 +50,16 @@ class Config(Base):
     @staticmethod
     async def get_value(session: AsyncSession, key: ConfigKey):
         return (await session.execute(select(Config).where(Config.key == key.name))).scalar().value
+
+    @staticmethod
+    async def check(session: AsyncSession) -> FeedbackGroup:
+        fbg = FeedbackGroup("Config")
+        configs = await Config.all(session)
+        for key in ConfigKey:
+            if key.name not in [config.key for config in configs]:
+                fbg.add(Feedback(f"Missing config value for key: {key.name}", FeedbackLevel.ERROR))
+        if fbg.level == FeedbackLevel.SUCCESS:
+            fbg.add(Feedback("All config value are present", FeedbackLevel.SUCCESS))
+        else:
+            fbg.add(Feedback("Use `/config init` or `/config set` to set the required values.", FeedbackLevel.WARNING))
+        return fbg
