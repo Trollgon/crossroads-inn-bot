@@ -32,12 +32,21 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
     mh, oh, ring, accessory = 1, 1, 1, 1
     for i in range(0, len(table_data), 2):
         div = table_data[i].div
+
+        # Check if slot has item
+        if not div["data-armory-ids"]:
+            continue
+
         item = Item()
         item.item_id = int(div["data-armory-ids"])
         item_data = await api.get_item(item.item_id)
         item.name = item_data["name"]
         item.rarity = Rarity[item_data["rarity"]]
         item.level = item_data["level"]
+
+        # TODO: handle relics
+        if item_data["type"] == "Mwcc":
+            continue
 
         if item_data["type"] in ["Consumable", "Gizmo"]:
             break
