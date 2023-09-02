@@ -24,20 +24,29 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
     sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
     table_data = sc_soup.find_all("td")
     build = Build()
-    build.name = f"{sc_soup.find_all('h1', {'class': 'font-sans font-bold text-5xl m-0 p-0'})[0].text}"
-    build.profession = Profession[sc_soup.find_all('a', {'class': '-top-1 relative inline-block lg:inline bg-black bg-opacity-30 py-1.5 px-4 rounded'})[0].text.split(' ')[0]]
+    build.name = f"{sc_soup.find_all('h1')[0].text}"
+    build.profession = Profession[sc_soup.find_all("i", {"class": "fa-solid fa-shuffle mr-2"})[0].parent.text.split(' ')[0].strip()]
     build.url = url
     equipment = Equipment()
     stats = EquipmentStats()
     mh, oh, ring, accessory = 1, 1, 1, 1
     for i in range(0, len(table_data), 2):
         div = table_data[i].div
+
+        # Check if slot has item
+        if not div["data-armory-ids"]:
+            continue
+
         item = Item()
         item.item_id = int(div["data-armory-ids"])
         item_data = await api.get_item(item.item_id)
         item.name = item_data["name"]
         item.rarity = Rarity[item_data["rarity"]]
         item.level = item_data["level"]
+
+        # TODO: handle relics
+        if item_data["type"] == "Mwcc":
+            continue
 
         if item_data["type"] in ["Consumable", "Gizmo"]:
             break
@@ -112,7 +121,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
 async def get_sc_builds(profession: Profession):
     # Find all recommended and viable builds that are not kite builds
     links = []
-    for category in ["recommended", "viable"]:
+    for category in ["recommended", "effective"]:
         resp = await sc_get(f"https://snowcrows.com/builds?profession={profession.name}&category={category}")
         sc_soup = BeautifulSoup(resp.decode("utf-8"), "html.parser")
         for link in sc_soup.find_all("a", href=True):
