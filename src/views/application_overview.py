@@ -51,7 +51,7 @@ class ApplicationOverview(discord.ui.View):
             if role.id == t1_role_id:
                 break
         else:
-            await interaction.response.send_message(ephemeral=True, content="You need to be tier 1 to apply for tier 2.", row=0)
+            await interaction.response.send_message(ephemeral=True, content="You need to be tier 1 to apply for tier 2.")
             return
         await interaction.response.send_modal(SubmitLogModal(self.bot, 2, Role.NONE))
 
