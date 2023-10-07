@@ -44,7 +44,9 @@ class Item(Base):
             string += f" ({self.upgrade_1})"
         return string
 
-    def compare(self, other, fbg: FeedbackGroup = FeedbackGroup("Item comparison")) -> FeedbackGroup:
+    def compare(self, other, fbg: FeedbackGroup = None) -> FeedbackGroup:
+        if not fbg:
+            fbg = FeedbackGroup("Item comparison")
         # Compare item stats
         if self.stats != other.stats:
             fbg.add(Feedback(f"Your {self.stats} {self.type} should be {other.stats}", FeedbackLevel.WARNING))
@@ -77,8 +79,9 @@ class Item(Base):
                              FeedbackLevel.WARNING))
         return fbg
 
-    def check_basics(self, fbg: FeedbackGroup = FeedbackGroup("Basic item checks"),
-                       min_rarity: Rarity = Rarity.Exotic, min_level: int = 80):
+    def check_basics(self, fbg: FeedbackGroup = None, min_rarity: Rarity = Rarity.Exotic, min_level: int = 80):
+        if not fbg:
+            fbg = FeedbackGroup("Basic item checks")
         # Check rarity
         if self.rarity < min_rarity:
             fbg.add(Feedback(f"Your {self.type} has to be at least {min_rarity}", FeedbackLevel.ERROR))

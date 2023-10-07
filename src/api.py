@@ -166,7 +166,9 @@ class API:
             case _:
                 raise ValueError("Invalid tier")
 
-    def __check_kp_t1(self, bosses_killed, max_bosses, fbg: FeedbackGroup = FeedbackGroup("Killproof")) -> FeedbackGroup:
+    def __check_kp_t1(self, bosses_killed, max_bosses, fbg: FeedbackGroup = None) -> FeedbackGroup:
+        if not fbg:
+            fbg = FeedbackGroup("Killproof")
         # check if at least 5 different bosses were killed
         if len(bosses_killed) >= 5:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)", FeedbackLevel.SUCCESS))
@@ -174,7 +176,9 @@ class API:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)", FeedbackLevel.ERROR))
         return fbg
 
-    def __check_kp_t2(self, bosses_killed, max_bosses, fbg: FeedbackGroup = FeedbackGroup("Killproof")) -> FeedbackGroup:
+    def __check_kp_t2(self, bosses_killed, max_bosses, fbg: FeedbackGroup = None) -> FeedbackGroup:
+        if not fbg:
+            fbg = FeedbackGroup("Killproof")
         # count the amount of restricted boss kills and remove them from the list
         bosses = bosses_killed.copy()
         restricted_count = 0
@@ -192,7 +196,9 @@ class API:
                              f"Check out the tier guide for more info.", FeedbackLevel.ERROR))
         return fbg
 
-    def __check_kp_t3(self, bosses_killed, max_bosses, fbg: FeedbackGroup = FeedbackGroup("Killproof")) -> FeedbackGroup:
+    def __check_kp_t3(self, bosses_killed, max_bosses, fbg: FeedbackGroup = None) -> FeedbackGroup:
+        if not fbg:
+            fbg = FeedbackGroup("Killproof")
         # check if all bosses were killed
         if len(bosses_killed) == max_bosses:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses", FeedbackLevel.SUCCESS))
