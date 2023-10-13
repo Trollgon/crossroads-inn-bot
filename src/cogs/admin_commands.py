@@ -1,4 +1,3 @@
-import os
 import discord
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
@@ -260,7 +259,10 @@ class AdminCommands(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     @app_commands.checks.has_permissions(administrator=True)
     @boss.command(name="add", description="Add a boss to the database")
-    async def bosses_add(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int):
+    async def bosses_add(self, interaction: Interaction, ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int = None):
+        if not achievement_id and kp_pool != KillProofPool.NOT_ALLOWED:
+            await interaction.response.send_message("Achievement ID can only be empty if the boss is not used for the KP check", ephemeral=True)
+            return
         async with Session.begin() as session:
             boss = await Boss.get(session, ei_encounter_id, is_cm)
             if boss:

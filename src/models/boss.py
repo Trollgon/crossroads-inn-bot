@@ -16,6 +16,8 @@ class Boss(Base):
     achievement_id: Mapped[int] = mapped_column(nullable=True)
 
     def __init__(self,ei_encounter_id: int, is_cm: bool, boss_name: str, kp_pool: KillProofPool, log_pool: BossLogPool, achievement_id: int | None):
+        if not achievement_id and kp_pool != KillProofPool.NOT_ALLOWED:
+            raise Exception(f"Achievement ID must be set for {kp_pool}")
         super(Boss, self).__init__()
         self.encounter_id = ei_encounter_id
         self.is_cm = is_cm
@@ -23,6 +25,10 @@ class Boss(Base):
         self.kp_pool = kp_pool
         self.log_pool = log_pool
         self.achievement_id = achievement_id
+
+    @property
+    def full_name(self):
+        return f"{self.boss_name} CM" if self.is_cm else f"{self.boss_name}"
 
     @staticmethod
     async def init(session: AsyncSession):

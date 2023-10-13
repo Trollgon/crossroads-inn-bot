@@ -1,8 +1,9 @@
-import json
-
-import aiohttp
-
+from typing import List
+from sqlalchemy import select
+from database import Session
 from exceptions import APIException
+from models.boss import Boss
+from models.enums.pools import KillProofPool
 from models.feedback import *
 from aiohttp_client_cache import CachedSession, SQLiteBackend
 from models.enums.equipment_slot import EquipmentSlot
@@ -10,17 +11,6 @@ from models.enums.rarity import Rarity
 from models.equipment import Equipment
 from models.item import Item
 from models.stats import EquipmentStats
-
-
-TIER_2_RESTRICTED = ["Gorseval the Multifarious",
-                     "Cairn the Indomitable",
-                     "Mursaat Overseer",
-                     "Samarog",
-                     "Statues",
-                     "Whisper of Jormag",
-                     "Kaineng Overlook",
-                     "Harvest Temple",
-                     "Aetherblade Hideout CM"]
 
 
 class API:
@@ -85,10 +75,10 @@ class API:
         account = await self.get_endpoint_v2("account")
         return account["name"]
 
-    async def get_characters(self) -> list[str]:
+    async def get_characters(self):
         return await self.get_endpoint_v2("characters")
 
-    async def get_character_data(self, character_name):
+    async def get_character_data(self, character_name: str):
         return await self.get_endpoint_v2(f"characters?id={character_name}")
 
     async def get_item(self, item_id: int):
@@ -123,50 +113,36 @@ class API:
         return fbg
 
     async def check_kp(self, tier: int) -> FeedbackGroup:
-        bosses_killed = []
+        # load all relevant bosses from database
+        async with Session.begin() as session:
+            bosses = (await session.execute(select(Boss).where(Boss.kp_pool != KillProofPool.NOT_ALLOWED))).scalars().all()
 
-        # load json with achievement ids
-        with open("achievements.json", "r") as json_file:
-            bosses = json.load(json_file)
+            # get achievements of player
+            achievements = await self.get_endpoint_v2("account/achievements")
 
-            # get max amount of bosses (-2 to handle statues)
-            max_bosses = len(bosses) - 2
+            # check achievements
+            bosses_killed = []
+            for achievement in achievements:
+                for boss in bosses:
+                    # check if achievement is relevant and if it is done
+                    if boss.achievement_id == achievement["id"]:
+                        if achievement["done"]:
+                            bosses_killed.append(boss)
 
-        # get achievements of player
-        achievements = await self.get_endpoint_v2("account/achievements")
 
-        # check achievements
-        for achievement in achievements:
-            for boss in bosses:
-                # check if achievement is relevant and if it is done
-                if boss["achievement"]["id"] == achievement["id"] and achievement["done"]:
-                    bosses_killed.append(boss["boss"])
 
-        # Combine the 3 statues bosses into a single entry if all 3 were killed
-        statues = 0
-        if "Statue of Death" in bosses_killed:
-            bosses_killed.remove("Statue of Death")
-            statues += 1
-        if "Statue of Ice" in bosses_killed:
-            bosses_killed.remove("Statue of Ice")
-            statues += 1
-        if "Statue of Darkness" in bosses_killed:
-            bosses_killed.remove("Statue of Darkness")
-            statues += 1
-        if statues == 3:
-            bosses_killed.append("Statues")
+            match tier:
+                case 1:
+                    return self.__check_kp_t1(bosses_killed, len(bosses))
+                case 2:
+                    return self.__check_kp_t2(bosses_killed, len(bosses))
+                case 3:
+                    bosses_missing = [boss for boss in bosses if boss not in bosses_killed]
+                    return self.__check_kp_t3(bosses_killed, bosses_missing, len(bosses))
+                case _:
+                    raise ValueError("Invalid tier")
 
-        match tier:
-            case 1:
-                return self.__check_kp_t1(bosses_killed, max_bosses)
-            case 2:
-                return self.__check_kp_t2(bosses_killed, max_bosses)
-            case 3:
-                return self.__check_kp_t3(bosses_killed, max_bosses)
-            case _:
-                raise ValueError("Invalid tier")
-
-    def __check_kp_t1(self, bosses_killed, max_bosses, fbg: FeedbackGroup = None) -> FeedbackGroup:
+    def __check_kp_t1(self, bosses_killed: List[Boss], max_bosses: int, fbg: FeedbackGroup = None) -> FeedbackGroup:
         if not fbg:
             fbg = FeedbackGroup("Killproof")
         # check if at least 5 different bosses were killed
@@ -176,40 +152,46 @@ class API:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses (5 required)", FeedbackLevel.ERROR))
         return fbg
 
-    def __check_kp_t2(self, bosses_killed, max_bosses, fbg: FeedbackGroup = None) -> FeedbackGroup:
+    def __check_kp_t2(self, bosses_killed: List[Boss], max_bosses: int, fbg: FeedbackGroup = None) -> FeedbackGroup:
         if not fbg:
             fbg = FeedbackGroup("Killproof")
         # count the amount of restricted boss kills and remove them from the list
-        bosses = bosses_killed.copy()
-        restricted_count = 0
-        for boss in TIER_2_RESTRICTED:
-            if boss in bosses_killed:
-                restricted_count += 1
-                bosses.remove(boss)
+        pool_a_count = 0
+        pool_b_count = 0
+        for boss in bosses_killed:
+            if boss.kp_pool == KillProofPool.POOL_B:
+                pool_b_count += 1
+            elif boss.kp_pool == KillProofPool.POOL_A:
+                pool_a_count += 1
+            else:
+                raise ValueError(f"Invalid KillProofPool: {boss}")
 
         # allow a maximum of 5 bosses from the restricted boss pool
-        if len(bosses) + min(restricted_count, 5) >= 10:
+        if pool_a_count + min(pool_b_count, 5) >= 10:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses", FeedbackLevel.SUCCESS))
         # if not enough bosses were killed return error
         else:
-            fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses. "
-                             f"Check out the tier guide for more info.", FeedbackLevel.ERROR))
+            fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses "
+                             f"(pool A: {pool_a_count}, pool B: {pool_b_count}). "
+                             f"In total you need 10 different boss kills with a minimum of 5 from pool B.", FeedbackLevel.ERROR))
         return fbg
 
-    def __check_kp_t3(self, bosses_killed, max_bosses, fbg: FeedbackGroup = None) -> FeedbackGroup:
+    def __check_kp_t3(self, bosses_killed: List[Boss], bosses_missing: List[Boss], max_bosses: int, fbg: FeedbackGroup = None) -> FeedbackGroup:
         if not fbg:
             fbg = FeedbackGroup("Killproof")
         # check if all bosses were killed
         if len(bosses_killed) == max_bosses:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses", FeedbackLevel.SUCCESS))
         # if only HT CM is missing return success
-        elif len(bosses_killed) == max_bosses - 1 and "Harvest Temple CM" not in bosses_killed:
+        elif len(bosses_missing) == 1 and bosses_missing[0].full_name == "Harvest Temple CM":
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses", FeedbackLevel.SUCCESS))
         # if not enough bosses were killed return error
         else:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses. "
-                             f"You need to have killed all bosses except HT CM. "
-                             f"Check out the tier guide for more info.", FeedbackLevel.ERROR))
+                             f"You need to have killed all bosses except HT CM.", FeedbackLevel.ERROR))
+            nl = "\n"
+            fbg.add(Feedback(f"You are missing the following bosses:\n"
+                             f"{nl.join([f'- {boss.full_name}' for boss in bosses_missing])}", FeedbackLevel.ERROR))
         return fbg
 
     async def get_equipment(self, character: str, tab: int = 1):
