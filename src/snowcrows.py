@@ -25,7 +25,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
     table_data = sc_soup.find_all("td")
     build = Build()
     build.name = f"{sc_soup.find_all('h1')[0].text}"
-    build.profession = Profession[sc_soup.find_all("i", {"class": "fa-solid fa-shuffle mr-2"})[0].parent.text.split(' ')[0].strip()]
+    build.profession = Profession[sc_soup.find_all("i", {"class": "fa-solid fa-shuffle mr-2"})[0].parent.text.strip().split(' ')[0].strip()]
     build.url = url
     equipment = Equipment()
     stats = EquipmentStats()
@@ -45,7 +45,7 @@ async def get_sc_build(url: str, api: API = API("")) -> Build:
         item.level = item_data["level"]
 
         # TODO: handle relics
-        if item_data["type"] == "Mwcc":
+        if item_data["type"] == "Relic":
             continue
 
         if item_data["type"] in ["Consumable", "Gizmo"]:
