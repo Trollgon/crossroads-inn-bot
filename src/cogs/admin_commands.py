@@ -60,7 +60,7 @@ class AdminCommands(commands.Cog):
                               "__The bot will not store your API key__\n",
                         inline=False)
         embed.add_field(name=" ", value="", inline=False)
-        embed.add_field(name="How to apply fot Tier 1",
+        embed.add_field(name="How to apply for Tier 1",
                         value="1. Press the `Tier 1` button below to start the application process\n"
                               "2. Enter your API key and the name of the character that you want to apply with.\n"
                               "3. The bot will check your Mastery and how many bosses you have killed\n"

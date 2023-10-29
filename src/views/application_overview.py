@@ -20,7 +20,7 @@ class ApplicationOverview(discord.ui.View):
         super().__init__(timeout=None)
         self.bot = bot
 
-    @discord.ui.button(label='Tier 1', style=discord.ButtonStyle.primary, custom_id='persistent_view:t1')
+    @discord.ui.button(label="Tier 1 [Gearcheck]", style=discord.ButtonStyle.primary, custom_id="persistent_view:t1")
     async def apply_t1(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Check if user already has an open application
         async with Session.begin() as session:
@@ -43,7 +43,7 @@ class ApplicationOverview(discord.ui.View):
                 return
         await interaction.response.send_modal(ApplicationModal(self.bot))
 
-    @discord.ui.button(label="Tier 2", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t2", row=0)
+    @discord.ui.button(label="Tier 2 [Log]", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t2", row=1)
     async def submit_log_t2(self, interaction: discord.Interaction, button: discord.ui.Button):
         async with Session.begin() as session:
             t1_role_id = int((await Config.get_value(session, ConfigKey.T1_ROLE_ID)))
@@ -55,19 +55,19 @@ class ApplicationOverview(discord.ui.View):
             return
         await interaction.response.send_modal(SubmitLogModal(self.bot, 2, Role.NONE))
 
-    @discord.ui.button(label="Tier 3: pDPS", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_pdps", row=1)
+    @discord.ui.button(label="Tier 3: pDPS [Log]", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_pdps", row=2)
     async def submit_log_t3_pdps(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.submit_log_t3(interaction, Role.POWER_DPS)
 
-    @discord.ui.button(label="Tier 3: cDPS", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_cdps", row=1)
+    @discord.ui.button(label="Tier 3: cDPS [Log]", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_cdps", row=2)
     async def submit_log_t3_cdps(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.submit_log_t3(interaction, Role.CONDITION_DPS)
 
-    @discord.ui.button(label="Tier 3: Boon DPS", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_bdps", row=1)
+    @discord.ui.button(label="Tier 3: Boon DPS [Log]", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_bdps", row=2)
     async def submit_log_t3_bdps(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.submit_log_t3(interaction, Role.BOON_DPS)
 
-    @discord.ui.button(label="Tier 3: Heal", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_heal", row=1)
+    @discord.ui.button(label="Tier 3: Heal [Log]", style=discord.ButtonStyle.primary, custom_id="persistent_view:submit_log_t3_heal", row=2)
     async def submit_log_t3_heal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.submit_log_t3(interaction, Role.HEAL)
 
@@ -91,7 +91,7 @@ class ApplicationOverview(discord.ui.View):
 
         await interaction.response.send_modal(SubmitLogModal(self.bot, 3, role))
 
-    @discord.ui.button(label="View Progress", style=discord.ButtonStyle.green, custom_id="persistent_view:view_progress", row=2)
+    @discord.ui.button(label="View Progress", style=discord.ButtonStyle.green, custom_id="persistent_view:view_progress", row=3)
     async def view_progress(self, interaction: discord.Interaction, button: discord.ui.Button):
         async with Session.begin() as session:
             await interaction.response.send_message(embed=await get_progress_embed(session, interaction.user), ephemeral=True)
