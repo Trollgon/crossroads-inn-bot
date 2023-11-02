@@ -314,10 +314,10 @@ class AdminCommands(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     @app_commands.checks.has_permissions(administrator=True)
     @config.command(name="init", description="Initialize the config")
-    async def config_init(self, interaction: Interaction):
+    async def config_init(self, interaction: Interaction, is_prod: bool = True):
         async with Session.begin() as session:
             await session.execute(delete(Config))
-            await Config.init(session)
+            await Config.init(session, is_prod)
         await interaction.response.send_message("Config initialized", ephemeral=True)
 
     @app_commands.guild_only

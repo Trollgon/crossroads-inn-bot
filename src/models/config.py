@@ -18,25 +18,40 @@ class Config(Base):
         self.value = value
 
     @staticmethod
-    async def init(session: AsyncSession):
+    async def init(session: AsyncSession, is_prod = True):
         session.add(Config(ConfigKey.MIN_GW2_BUILD, "147894"))
         session.add(Config(ConfigKey.MAX_SQUAD_DOWNS, "9"))
         session.add(Config(ConfigKey.MAX_SQUAD_DEATHS, "2"))
         session.add(Config(ConfigKey.MAX_PLAYER_DOWNS, "2"))
 
-        session.add(Config(ConfigKey.LOG_CHANNEL_ID, "1079378660437528576"))
-        session.add(Config(ConfigKey.GEAR_REVIEW_CHANNEL_ID, "1088082355866058802"))
-        session.add(Config(ConfigKey.LOG_REVIEW_CHANNEL_ID, "1088082355866058802"))
-        session.add(Config(ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID, "1088074442179104818"))
+        if is_prod:
+            session.add(Config(ConfigKey.LOG_CHANNEL_ID, "1081987203820953681"))
+            session.add(Config(ConfigKey.GEAR_REVIEW_CHANNEL_ID, "1081987458914336898"))
+            session.add(Config(ConfigKey.LOG_REVIEW_CHANNEL_ID, "1081987458914336898"))
+            session.add(Config(ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID, "575983140003119125"))
 
-        session.add(Config(ConfigKey.T0_ROLE_ID, "1088864141340594217"))
-        session.add(Config(ConfigKey.T1_ROLE_ID, "1072652111709491200"))
-        session.add(Config(ConfigKey.T2_ROLE_ID, "1079888828514447410"))
-        session.add(Config(ConfigKey.T3_ROLE_ID, "1079888894025269258"))
-        session.add(Config(ConfigKey.POWER_DPS_ROLE_ID, "1133150361868316682"))
-        session.add(Config(ConfigKey.CONDITION_DPS_ROLE_ID, "1133159967994691645"))
-        session.add(Config(ConfigKey.HEAL_ROLE_ID, "1133160011586093167"))
-        session.add(Config(ConfigKey.BOON_DPS_ROLE_ID, "1133159862604406804"))
+            session.add(Config(ConfigKey.T0_ROLE_ID, "472087946565255208"))
+            session.add(Config(ConfigKey.T1_ROLE_ID, "248186146058797066"))
+            session.add(Config(ConfigKey.T2_ROLE_ID, "248186317962215426"))
+            session.add(Config(ConfigKey.T3_ROLE_ID, "248186450204426242"))
+            session.add(Config(ConfigKey.POWER_DPS_ROLE_ID, "715942960427958335"))
+            session.add(Config(ConfigKey.CONDITION_DPS_ROLE_ID, "715943091785433166"))
+            session.add(Config(ConfigKey.HEAL_ROLE_ID, "715943483004682280"))
+            session.add(Config(ConfigKey.BOON_DPS_ROLE_ID, "715943716757569646"))
+        else:
+            session.add(Config(ConfigKey.LOG_CHANNEL_ID, "1079378660437528576"))
+            session.add(Config(ConfigKey.GEAR_REVIEW_CHANNEL_ID, "1088082355866058802"))
+            session.add(Config(ConfigKey.LOG_REVIEW_CHANNEL_ID, "1088082355866058802"))
+            session.add(Config(ConfigKey.TIER_ASSIGNMENT_CHANNEL_ID, "1088074442179104818"))
+
+            session.add(Config(ConfigKey.T0_ROLE_ID, "1088864141340594217"))
+            session.add(Config(ConfigKey.T1_ROLE_ID, "1072652111709491200"))
+            session.add(Config(ConfigKey.T2_ROLE_ID, "1079888828514447410"))
+            session.add(Config(ConfigKey.T3_ROLE_ID, "1079888894025269258"))
+            session.add(Config(ConfigKey.POWER_DPS_ROLE_ID, "1133150361868316682"))
+            session.add(Config(ConfigKey.CONDITION_DPS_ROLE_ID, "1133159967994691645"))
+            session.add(Config(ConfigKey.HEAL_ROLE_ID, "1133160011586093167"))
+            session.add(Config(ConfigKey.BOON_DPS_ROLE_ID, "1133159862604406804"))
 
     @staticmethod
     async def all(session: AsyncSession):
