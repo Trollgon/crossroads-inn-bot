@@ -159,30 +159,34 @@ class AdminCommands(commands.Cog):
     @build.command(name="init", description="Populates the database with all recommended and viable builds")
     async def build_init(self, interaction: Interaction):
         await interaction.response.defer(thinking=True, ephemeral=True)
+        errors = ""
         async with Session.begin() as session:
             for profession in Profession:
                 urls = await get_sc_builds(profession)
                 new_builds = []
                 for url in urls:
-                    build_sc = await get_sc_build(url)
-                    new_builds.append(build_sc.name)
-                    build = await Build.find(session, name=build_sc.name)
-                    # If the build already exists in the DB: check if the gear is the same. if not archive old build
-                    if build:
-                        fbc = build.equipment.compare(build_sc.equipment)
-                        if fbc.level <= FeedbackLevel.SUCCESS:
-                            # Don't need to add it again if the gear is the same
-                            continue
-                        else:
-                            await build.archive()
-                    session.add(build_sc)
+                    try:
+                        build_sc = await get_sc_build(url)
+                        new_builds.append(build_sc.name)
+                        build = await Build.find(session, name=build_sc.name)
+                        # If the build already exists in the DB: check if the gear is the same. if not archive old build
+                        if build:
+                            fbc = build.equipment.compare(build_sc.equipment)
+                            if fbc.level <= FeedbackLevel.SUCCESS:
+                                # Don't need to add it again if the gear is the same
+                                continue
+                            else:
+                                await build.archive()
+                        session.add(build_sc)
+                    except Exception as e:
+                        errors += f"Error adding build {url}: {e}\n"
 
                 # Archive builds that are not in the list of new builds
                 for build in await Build.from_profession(session, profession):
                     if build.name not in new_builds:
                         await build.archive()
 
-        await interaction.followup.send("Added all recommended and viable builds (hand kite builds were ignored)", ephemeral=True)
+        await interaction.followup.send(f"Added all recommended and viable builds (hand kite builds were ignored)\n{errors}", ephemeral=True)
 
     @app_commands.guild_only
     @app_commands.default_permissions(manage_roles=True)
