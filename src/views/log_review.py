@@ -101,11 +101,12 @@ class LogReviewModal(Modal, title="Log review"):
             # Cleanup
             await (await rr_channel.fetch_message(log.review_message_id)).delete()
             log.review_message_id = None
-        self.parent_view.stop()
-        await interaction.followup.send(content=f"The log has been {self.status}", ephemeral=True)
+            self.parent_view.stop()
+            await interaction.followup.send(content=f"The log has been {self.status}", ephemeral=True)
 
-        # Log
-        embed = Embed(title=f"Log review: {self.status}", colour=self.status.colour)
-        embed.description = f"**ID:** {self.log_id}\n**User:** {member}\n**Reviewer:** {interaction.user.mention}\n"
-        embed.add_field(name="Feedback", value=self.feedback)
-        await log_to_channel(self.bot, embed)
+            # Log
+            embed = Embed(title=f"Log review: {self.status}", colour=self.status.colour)
+            embed.description = (f"**ID:** {self.log_id}\n**User:** {member}\n**Reviewer:** {interaction.user.mention}\n"
+                                 f"**Tier:** {log.tier}\n**Role:** {log.role}\n**Log:** {log.log_url}\n")
+            embed.add_field(name="Feedback", value=self.feedback)
+            await log_to_channel(self.bot, embed)
