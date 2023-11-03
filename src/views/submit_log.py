@@ -91,6 +91,8 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
         # Check log
         fbc = await check_log(log_json, await api.get_account_name(), self.tier, interaction.user.id, str(self.log_url), log)
         fbc.to_embed(embed)
+        if fbc.level == FeedbackLevel.SUCCESS:
+            embed.add_field(name="Log successfully submitted for manual review", value="", inline=False)
 
         log.status = LogStatus.DENIED if fbc.level == FeedbackLevel.ERROR else LogStatus.WAITING_FOR_REVIEW
 
