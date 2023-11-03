@@ -2,7 +2,7 @@ import discord
 from discord import Interaction, ButtonStyle, Embed
 from discord.ext import commands
 from discord.ui import View, Modal
-from sqlalchemy import select, func
+from sqlalchemy import select, func, distinct
 
 from database import Session
 from helpers.emotes import get_random_success_emote
@@ -75,10 +75,16 @@ class LogReviewModal(Modal, title="Log review"):
                 if log.tier == 2 and (await session.execute(stmt)).scalar() + 1 >= 2:
                     roles.append(interaction.guild.get_role(int((await session.get(Config, ConfigKey.T2_ROLE_ID.name)).value)))
                     old_role = interaction.guild.get_role(int((await session.get(Config, ConfigKey.T1_ROLE_ID.name)).value))
-                elif log.tier == 3 and (await session.execute(stmt)).scalar() + 1 >= 3:
-                    roles.append(interaction.guild.get_role(int((await session.get(Config, ConfigKey.T3_ROLE_ID.name)).value)))
-                    roles.append(interaction.guild.get_role(int((await session.get(Config, log.role.get_config_key().name)).value)))
-                    old_role = interaction.guild.get_role(int((await session.get(Config, ConfigKey.T2_ROLE_ID.name)).value))
+                elif log.tier == 3:
+                    # After 3 different T3 bosses, assign T3 role and remove T2 role
+                    stmt_t3 = select(func.count(distinct(Log.encounter_id))).where(Log.discord_user_id == log.discord_user_id)\
+                    .where((Log.status == LogStatus.REVIEW_ACCEPTED) | (Log.id == log.id)).where(Log.tier == log.tier)
+                    if(await session.execute(stmt_t3)).scalar() >= 3:
+                        roles.append(interaction.guild.get_role(int((await session.get(Config, ConfigKey.T3_ROLE_ID.name)).value)))
+                        old_role = interaction.guild.get_role(int((await session.get(Config, ConfigKey.T2_ROLE_ID.name)).value))
+                    # After 3 T3 logs of the same role, assign role
+                    if (await session.execute(stmt)).scalar() + 1 >= 3:
+                        roles.append(interaction.guild.get_role(int((await session.get(Config, log.role.get_config_key().name)).value)))
 
                 if roles:
                     for role in roles:
