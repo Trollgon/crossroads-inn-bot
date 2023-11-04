@@ -2,6 +2,7 @@ import aiohttp
 import discord
 from discord import Interaction
 from discord.ext import commands
+from sqlalchemy import select, func
 from api import API
 from database import Session
 from helpers.custom_embed import CustomEmbed
@@ -43,6 +44,17 @@ class SubmitLogModal(discord.ui.Modal, title="Submit log"):
                             inline=False)
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
+
+        # Limit how many logs can be submitted at a time
+        stmt = select(func.count(Log.id)).where(Log.discord_user_id == interaction.user.id) \
+            .where((Log.status == LogStatus.WAITING_FOR_REVIEW) | (Log.status == LogStatus.REVIEW_ACCEPTED))
+        async with Session.begin() as session:
+            active_logs = (await session.execute(stmt)).scalar()
+            if (self.tier == 2 and active_logs >= 2) or (self.tier == 3 and active_logs >= 3):
+                embed.add_field(name=f"{FeedbackLevel.ERROR.emoji} Please wait until your logs have been reviewed before submitting more",
+                                value="", inline=False)
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
 
         # Check API Key
         api = API(str(self.api_key))
