@@ -91,8 +91,7 @@ class LogReviewModal(Modal, title="Log review"):
                         await member.add_roles(role)
                         role_assignment_text += f"\nYou have been assigned {role.name} {get_random_success_emote()}"
                     await member.remove_roles(old_role)
-                emote = get_random_success_emote()
-            await ta_channel.send(content=f"{member.mention} {self.feedback} {emote}\n{role_assignment_text}")
+            ta_message = await ta_channel.send(content=f"{member.mention} {self.feedback} \n{role_assignment_text}")
 
             # Update application
             log.status = self.status
@@ -108,5 +107,5 @@ class LogReviewModal(Modal, title="Log review"):
             embed = Embed(title=f"Log review: {self.status}", colour=self.status.colour)
             embed.description = (f"**ID:** {self.log_id}\n**User:** {member}\n**Reviewer:** {interaction.user.mention}\n"
                                  f"**Tier:** {log.tier}\n**Role:** {log.role}\n**Log:** {log.log_url}\n")
-            embed.add_field(name="Feedback", value=self.feedback)
+            embed.add_field(name="Feedback", value=ta_message.jump_url)
             await log_to_channel(self.bot, embed)
