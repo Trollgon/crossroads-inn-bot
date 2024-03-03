@@ -43,8 +43,7 @@ class AdminCommands(commands.Cog):
 
         embed = Embed(title="Tier Application Bot",
                       description="You can use this bot to apply for tiers on this server. You can find the requirements for our tiers "
-                                  f"[here](https://discord.com/channels/226398442082140160/1028218316751380541/1029082959430553650).\n\n"
-                                  f"This bot currently only supports Tier 1.",
+                                  f"[here](https://discord.com/channels/226398442082140160/1028218316751380541/1029082959430553650).",
                       colour=discord.Colour.from_rgb(99, 51, 4)
                       )
         embed.set_author(name=self.bot.user.display_name,
