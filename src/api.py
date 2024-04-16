@@ -183,7 +183,7 @@ class API:
         if len(bosses_killed) == max_bosses:
             fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses", FeedbackLevel.SUCCESS))
         # if not enough bosses were killed check for missing encounters
-        else len(bosses_missing) <= 2:
+        else:
             # if only HT CM + ToF CM is missing return success
             permitted_missing_bosses = ["Harvest Temple CM", "Temple of Febe CM"]
             applicant_can_pass = True
@@ -191,6 +191,7 @@ class API:
             for boss in bosses_missing:
                 if boss.full_name not in permitted_missing_bosses:
                     applicant_can_pass = False
+                    
             if applicant_can_pass:
                 fbg.add(Feedback(f"You have killed {len(bosses_killed)}/{max_bosses} different bosses", FeedbackLevel.SUCCESS))
             # if not enough bosses were killed return error
@@ -200,6 +201,7 @@ class API:
                 nl = "\n"
                 fbg.add(Feedback(f"You are missing the following bosses:\n"
                                  f"{nl.join([f'- {boss.full_name}' for boss in bosses_missing])}", FeedbackLevel.ERROR))
+                
         return fbg
 
     async def get_equipment(self, character: str, tab: int = 1):
